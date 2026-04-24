@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Circuit Breaker: Defusal Unit</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --sys-nav: #002D47;
+            --selected: #54D8A8;
+            --presence: #65DCB1;
+            --notify: #76E0B9;
+            --bg-deep: #001220;
+            --case-metal: #1a1a1e;
+
+            --dot-size: 12px;
+            --gap-size: 60px;
+            --line-thickness: 10px;
+            /* Precise centering math */
+            --p-off: 24px;
+            --terminal-area: 312px; /* (5 gaps * 60) + 12 dot */
+            --grid-dim: 360px;      /* 312 + (2 * 24 padding) */
+        }
+
+        @font-face {
+            font-family: 'Arcade';
+            src: url('https://fonts.cdnfonts.com/s/14022/ArcadeClassic.woff') format('woff');
+        }
+
+        body {
+            background-color: var(--bg-deep);
+            color: #d1d5db;
+            font-family: 'Arcade', monospace;
+            image-rendering: pixelated;
+            overflow-x: hidden;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+        }
+
+        /* CRT Scanline Effect */
+        body::before {
+            content: " ";
+            display: block;
+            position: fixed;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.3) 50%),
+                        linear-gradient(90deg, rgba(255, 0, 0, 0.05), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.05));
+            z-index: 100;
+            background-size: 100% 4px, 3px 100%;
+            pointer-events: none;
+        }
+
+        .view-section { display: none; }
+        .view-active { display: flex; flex-direction: column; align-items: center; width: 100%; }
+
+        /* PIXEL ART BRIEFCASE */
+        .briefcase-outer {
+            background-color: #000;
+            border: 4px solid #3a3a3e;
+            box-shadow:
+                0 0 0 4px #1a1a1e,
+                0 0 0 8px #000,
+                0 15px 0 rgba(0,0,0,0.6);
+            padding: 24px;
+            position: relative;
+        }
+
+        .briefcase-latches {
+            position: absolute;
+            top: -12px;
+            left: 40px;
+            right: 40px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .latch {
+            width: 50px;
+            height: 20px;
+            background: #4a4a4e;
+            border: 4px solid #000;
+        }
+
+        .hazard-stripes {
+            background: repeating-linear-gradient(
+                -45deg,
+                #fbbf24,
+                #fbbf24 15px,
+                #000 15px,
+                #000 30px
+            );
+            height: 12px;
+            width: 100%;
+            border-bottom: 4px solid #000;
+        }
+
+        .btn-arcade {
+            background-color: var(--sys-nav);
+            border: 4px solid var(--selected);
+            color: var(--selected);
+            padding: 1rem 1.5rem;
+            text-transform: uppercase;
+            box-shadow: 6px 6px 0px #000;
+            transition: transform 0.05s steps(2);
+            cursor: pointer;
+        }
+        .btn-arcade:hover {
+            filter: brightness(1.2);
+            transform: translate(-2px, -2px);
+            box-shadow: 8px 8px 0px #000;
+        }
+        .btn-arcade:active {
+            transform: translate(4px, 4px);
+            box-shadow: 0px 0px 0px #000;
+        }
+
+        /* GRID STYLES */
+        .game-grid-base {
+            background-color: #001a2b;
+            border: 4px solid #000;
+            outline: 2px solid var(--sys-nav);
+            position: relative;
+            width: var(--grid-dim);
+            height: var(--grid-dim);
+            margin: 0 auto;
+        }
+
+        .dot {
+            width: var(--dot-size);
+            height: var(--dot-size);
+            background: #f59e0b;
+            border: 2px solid #000;
+            z-index: 10;
+            position: absolute;
+        }
+
+        .line {
+            position: absolute;
+            cursor: pointer;
+            z-index: 5;
+            border: 2px solid #000;
+        }
+        .line-empty:hover {
+            background-color: rgba(255,255,255,0.25);
+        }
+        .line-h {
+            height: var(--line-thickness);
+            width: var(--gap-size);
+            /* Center vertically on dot */
+            margin-top: calc((var(--dot-size) - var(--line-thickness)) / 2);
+        }
+        .line-v {
+            width: var(--line-thickness);
+            height: var(--gap-size);
+            /* Center horizontally on dot */
+            margin-left: calc((var(--dot-size) - var(--line-thickness)) / 2);
+        }
+
+        .bg-player { background: var(--selected); }
+        .bg-void { background: #ef4444; }
+        .bg-obstacle { background: #cbd5e1; pointer-events: none; }
+
+        .box {
+            position: absolute;
+            width: var(--gap-size);
+            height: var(--gap-size);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            font-size: 1rem;
+            z-index: 1;
+            transform: scale(0);
+        }
+        .box-claimed { transform: scale(1); }
+        .box-scored { background-color: rgba(84, 216, 168, 0.2); color: var(--selected); }
+        .box-blocked { background-color: rgba(239, 68, 68, 0.2); color: #ef4444; }
+
+        .timer-text { font-family: monospace; color: #ef4444; text-shadow: 2px 2px 0 #000; }
+
+        @keyframes arcade-blink {
+            0%, 49% { opacity: 1; }
+            50%, 100% { opacity: 0; }
+        }
+        .blink { animation: arcade-blink 0.5s infinite steps(1); }
+
+        ::-webkit-scrollbar { width: 12px; }
+        ::-webkit-scrollbar-track { background: #000; }
+        ::-webkit-scrollbar-thumb { background: var(--sys-nav); border: 4px solid #000; }
+    </style>
+</head>
+<body>
+
+    <!-- MENU VIEW -->
+    <div id="view-menu" class="view-section view-active py-24 px-4">
+        <div class="mb-16 text-center">
+            <h1 class="text-6xl md:text-7xl font-black mb-2 italic" style="color:var(--notify); text-shadow: 8px 8px 0px #000;">CIRCUIT</h1>
+            <h1 class="text-6xl md:text-7xl font-black italic" style="color:var(--presence); text-shadow: 8px 8px 0px #000;">BREAKER</h1>
+            <p class="mt-4 text-xs font-bold text-slate-500 tracking-[0.4em] uppercase">EOD DEFUSAL UNIT - 8-BIT</p>
+        </div>
+
+        <div class="space-y-8 w-full max-w-xs">
+            <button onclick="showView('game')" class="btn-arcade w-full text-2xl flex justify-between items-center px-6">
+                <span>NEW MISSION</span>
+                <span>></span>
+            </button>
+            <button onclick="showView('rules')" class="btn-arcade w-full text-2xl flex justify-between items-center px-6">
+                <span>PROTOCOL (RULES)</span>
+                <span>?</span>
+            </button>
+            <button onclick="showView('history')" class="btn-arcade w-full text-2xl flex justify-between items-center px-6">
+                <span>LOGS</span>
+                <span>#</span>
+            </button>
+        </div>
+
+        <div class="mt-20 p-6 border-4 border-black bg-gray-950 text-center shadow-[8px_8px_0px_#000] w-full max-w-xs">
+            <span class="text-[10px] text-gray-500 uppercase block mb-2">RECORD SCORE</span>
+            <span id="high-score-display" class="text-6xl text-white">00</span>
+        </div>
+    </div>
+
+    <!-- GAME VIEW -->
+    <div id="view-game" class="view-section py-10 px-4">
+        <div class="w-full max-w-xl flex justify-between items-center mb-8 px-2">
+            <button onclick="abortMission()" class="text-xs uppercase bg-black px-4 py-2 border-2 border-gray-700 hover:border-white transition">← ABORT</button>
+            <div class="text-right">
+                <span id="mission-id" class="text-[10px] text-gray-500 block font-bold uppercase">DEVICE ID: XB-99</span>
+                <span class="text-sm text-red-500 uppercase tracking-tighter blink">LIVE CHARGE</span>
+            </div>
+        </div>
+
+        <div class="briefcase-outer">
+            <div class="briefcase-latches">
+                <div class="latch"></div>
+                <div class="latch"></div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-0 bg-black border-4 border-gray-800 mb-6">
+                <div class="p-4 border-r-4 border-gray-800 flex flex-col items-center">
+                    <span class="text-[10px] text-gray-600 mb-1 uppercase font-bold">Cells</span>
+                    <span id="player-score" class="text-4xl font-black" style="color:var(--presence);">00</span>
+                </div>
+                <div class="p-4 border-r-4 border-gray-800 flex flex-col items-center">
+                    <span class="text-[10px] text-gray-600 mb-1 uppercase font-bold">Timer</span>
+                    <span id="mission-timer" class="text-3xl font-bold timer-text">02:00</span>
+                </div>
+                <div class="p-4 flex flex-col items-center justify-center">
+                    <div class="flex gap-2" id="move-indicators">
+                        <div id="m1" class="w-6 h-6 border-4 border-gray-900 bg-black"></div>
+                        <div id="m2" class="w-6 h-6 border-4 border-gray-900 bg-black"></div>
+                        <div id="m3" class="w-6 h-6 border-4 border-gray-900 bg-black"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-black p-4 border-4 border-gray-800 flex flex-col items-center">
+                <div class="hazard-stripes mb-4"></div>
+                <div id="game-grid" class="game-grid-base"></div>
+                <div class="hazard-stripes mt-4"></div>
+            </div>
+
+            <div class="mt-4 flex justify-between items-center opacity-30 text-[9px] px-2">
+                <span>EOD-UNIT-PROPERTY-V5</span>
+                <span>SECURE CHASSIS</span>
+            </div>
+        </div>
+
+        <div id="status-box" class="w-full max-w-xl mt-10 py-5 border-4 border-black text-xl font-black uppercase text-center shadow-[6px_6px_0px_#000]" style="background-color: var(--selected); color: #000;">
+            OVERRIDE WIRE 1
+        </div>
+    </div>
+
+    <!-- RULES VIEW -->
+    <div id="view-rules" class="view-section py-20 px-6">
+        <h2 class="text-5xl font-black mb-10 text-center" style="color:var(--notify); text-shadow: 6px 6px 0px #000;">PROTOCOL (RULES)</h2>
+        <div class="bg-black border-4 border-gray-800 p-8 space-y-8 text-gray-300 shadow-[10px_10px_0px_#000] w-full max-w-lg">
+            <div class="border-l-8 p-4 bg-gray-950" style="border-color: var(--selected);">
+                <h3 class="text-white font-bold mb-1 uppercase tracking-wider">01. WIRE CYCLE</h3>
+                <p class="text-xs">Place <span style="color:var(--selected)">2 BLUE WIRES</span> to override system nodes, then <span class="text-red-500 font-bold">1 RED SURGE WIRE</span>. Repeat until circuit is closed.</p>
+            </div>
+            <div class="border-l-8 p-4 bg-gray-950" style="border-color: #cbd5e1;">
+                <h3 class="text-white font-bold mb-1 uppercase tracking-wider">02. TIME BONUS</h3>
+                <p class="text-xs">DEFUSE UNDER <span class="text-red-500">120S</span>. GAIN <span style="color:var(--presence)">+0.5 PTS</span> PER 10S REMAINING UPON DEFUSAL.</p>
+            </div>
+            <div class="border-l-8 p-4 bg-gray-950" style="border-color: #ef4444;">
+                <h3 class="text-white font-bold mb-1 uppercase tracking-wider">03. DEFUSAL</h3>
+                <p class="text-xs">Enclose a cell completely to disarm it. If a <span class="text-red-500 font-bold">RED SURGE</span> touches any side, score is 0.</p>
+            </div>
+        </div>
+        <button onclick="showView('menu')" class="btn-arcade mt-12 w-full max-w-xs text-2xl">BACK TO CORE</button>
+    </div>
+
+    <!-- HISTORY VIEW -->
+    <div id="view-history" class="view-section py-20 px-6">
+        <h2 class="text-5xl font-black mb-10 text-center" style="color:var(--presence); text-shadow: 6px 6px 0px #000;">MISSION LOG</h2>
+        <div class="bg-black border-4 border-gray-800 p-2 max-h-[440px] overflow-y-auto shadow-[10px_10px_0px_#000] w-full max-w-lg">
+            <table class="w-full text-left font-sans">
+                <thead>
+                    <tr class="text-[10px] text-gray-600 uppercase border-b-2 border-gray-800 font-bold">
+                        <th class="p-5">TIMESTAMP</th>
+                        <th class="p-5 text-right">SCORE</th>
+                    </tr>
+                </thead>
+                <tbody id="history-table-body"></tbody>
+            </table>
+        </div>
+        <button onclick="showView('menu')" class="btn-arcade mt-12 w-full max-w-xs text-2xl">BACK TO CORE</button>
+    </div>
+
+    <!-- GAME OVER MODAL -->
+    <div id="game-over-modal" class="fixed inset-0 bg-black/95 flex items-center justify-center z-[200] hidden">
+        <div class="bg-gray-900 p-12 border-8 border-black shadow-[20px_20px_0px_rgba(0,0,0,0.5)] text-center max-w-sm w-full mx-4">
+            <h2 id="modal-title" class="text-4xl font-black mb-4 uppercase italic">DEVICE DEFUSED</h2>
+            <div id="modal-breakdown" class="text-[10px] text-gray-400 mb-4 uppercase font-bold">CELLS: 0 | BONUS: 0</div>
+            <div class="text-[10px] font-bold text-gray-500 uppercase">FINAL SCORE</div>
+            <div id="modal-result" class="text-9xl font-black mb-10" style="color:var(--presence);">00</div>
+            <button onclick="resetGame()" class="w-full py-5 border-4 border-black font-black uppercase tracking-widest text-lg shadow-[6px_6px_0px_#000]" style="background-color: var(--selected); color: #000;">
+                NEXT MISSION
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const MISSION_PROFILES = [
+            { id: "ALPHA-1", seed: 3 }, { id: "BETA-4", seed: 2.2 },
+            { id: "GAMMA-9", seed: 4 }, { id: "SIGMA-X", seed: 5.1 },
+            { id: "OMEGA-0", seed: 6.2 }, { id: "NEON-2", seed: 2.5 },
+            { id: "CYBER-5", seed: 3.5 }, { id: "VOID-8", seed: 4.8 },
+            { id: "PRIME-1", seed: 3.2 }, { id: "TITAN-K", seed: 7.1 },
+            { id: "GHOST-V", seed: 4.2 }, { id: "HYPER-6", seed: 5.5 },
+            { id: "SOLO-Q", seed: 2.8 }, { id: "NEXUS-M", seed: 6.5 },
+            { id: "ZERO-G", seed: 5.2 }, { id: "STORM-Z", seed: 3.8 },
+            { id: "QUARTZ", seed: 2.2 }, { id: "PULSE-W", seed: 4.8 },
+            { id: "ZENITH", seed: 8.2 }, { id: "BLADE-9", seed: 4.4 }
+        ];
+
+        const GRID_SIZE = 6;
+        const BOXES_SIZE = GRID_SIZE - 1;
+        const GAP = 60;
+
+        const state = {
+            hLines: [], vLines: [], boxes: [],
+            playerScore: 0, moveCycle: 0,
+            isGameOver: false, timeLeft: 120, // Reduced to 2 minutes
+            timerInterval: null, timerActive: false,
+            highScore: parseFloat(localStorage.getItem('circuit_breaker_high')) || 0
+        };
+
+        const elements = {
+            grid: document.getElementById('game-grid'),
+            playerScore: document.getElementById('player-score'),
+            status: document.getElementById('status-box'),
+            timer: document.getElementById('mission-timer'),
+            missionId: document.getElementById('mission-id'),
+            modal: document.getElementById('game-over-modal'),
+            modalTitle: document.getElementById('modal-title'),
+            modalResult: document.getElementById('modal-result'),
+            modalBreakdown: document.getElementById('modal-breakdown'),
+            m1: document.getElementById('m1'), m2: document.getElementById('m2'), m3: document.getElementById('m3'),
+            highScoreDisp: document.getElementById('high-score-display'),
+            historyBody: document.getElementById('history-table-body')
+        };
+
+        function showView(viewId) {
+            document.querySelectorAll('.view-section').forEach(v => v.classList.remove('view-active'));
+            document.getElementById('view-' + viewId).classList.add('view-active');
+            if(viewId === 'history') loadHistory();
+            if(viewId === 'menu') updateHighScoreDisplay();
+            if(viewId === 'game') resetGame();
+        }
+
+        function resetGame() {
+            clearInterval(state.timerInterval);
+            state.timerActive = false;
+            state.timeLeft = 120; // 2 Minutes
+            state.isGameOver = false;
+            state.playerScore = 0;
+            state.moveCycle = 0;
+            state.hLines = Array(GRID_SIZE).fill().map(() => Array(BOXES_SIZE).fill(null));
+            state.vLines = Array(BOXES_SIZE).fill().map(() => Array(GRID_SIZE).fill(null));
+            state.boxes = Array(BOXES_SIZE).fill().map(() => Array(BOXES_SIZE).fill(null));
+            elements.timer.textContent = "02:00";
+            elements.modal.classList.add('hidden');
+            const mission = MISSION_PROFILES[Math.floor(Math.random() * MISSION_PROFILES.length)];
+            elements.missionId.textContent = `DEVICE ID: ${mission.id}`;
+            createBoard();
+            applyObstacles(mission.seed);
+            updateDisplay();
+        }
+
+        function applyObstacles(seed) {
+            // Apply perimeter
+            for (let c = 0; c < BOXES_SIZE; c++) { setLine('h', 0, c, 'obstacle'); setLine('h', GRID_SIZE - 1, c, 'obstacle'); }
+            for (let r = 0; r < BOXES_SIZE; r++) { setLine('v', r, 0, 'obstacle'); setLine('v', r, GRID_SIZE - 1, 'obstacle'); }
+
+            let count = 1;
+            for (let r = 0; r < GRID_SIZE; r++) {
+                for (let c = 0; c < BOXES_SIZE; c++) {
+                    if (state.hLines[r][c] === null) {
+                        if (Math.floor(count % seed) === 0) setLine('h', r, c, 'obstacle');
+                        count++;
+                    }
+                }
+            }
+        }
+
+        function createBoard() {
+            elements.grid.innerHTML = '';
+            const pOff = 24;
+            for (let r = 0; r < BOXES_SIZE; r++) {
+                for (let c = 0; c < BOXES_SIZE; c++) {
+                    const b = document.createElement('div');
+                    b.className = 'box'; b.id = `box-${r}-${c}`;
+                    b.style.top = `${r * GAP + pOff + 6}px`; b.style.left = `${c * GAP + pOff + 6}px`;
+                    elements.grid.appendChild(b);
+                }
+            }
+            for (let r = 0; r < GRID_SIZE; r++) {
+                for (let c = 0; c < BOXES_SIZE; c++) {
+                    const l = document.createElement('div');
+                    l.className = 'line line-h line-empty'; l.id = `h-${r}-${c}`;
+                    l.style.top = `${r * GAP + pOff}px`; l.style.left = `${c * GAP + pOff + 6}px`;
+                    l.onclick = () => handleLineClick('h', r, c);
+                    elements.grid.appendChild(l);
+                }
+            }
+            for (let r = 0; r < BOXES_SIZE; r++) {
+                for (let c = 0; c < GRID_SIZE; c++) {
+                    const l = document.createElement('div');
+                    l.className = 'line line-v line-empty'; l.id = `v-${r}-${c}`;
+                    l.style.top = `${r * GAP + pOff + 6}px`; l.style.left = `${c * GAP + pOff}px`;
+                    l.onclick = () => handleLineClick('v', r, c);
+                    elements.grid.appendChild(l);
+                }
+            }
+            for (let r = 0; r < GRID_SIZE; r++) {
+                for (let c = 0; c < GRID_SIZE; c++) {
+                    const d = document.createElement('div');
+                    d.className = 'dot';
+                    d.style.top = `${r * GAP + pOff}px`; d.style.left = `${c * GAP + pOff}px`;
+                    elements.grid.appendChild(d);
+                }
+            }
+        }
+
+        function handleLineClick(type, r, c) {
+            if (state.isGameOver) return;
+            if (!state.timerActive) startTimer();
+            const owner = (state.moveCycle < 2) ? 'player' : 'void';
+            setLine(type, r, c, owner);
+            state.moveCycle = (state.moveCycle + 1) % 3;
+            checkGameOver();
+            updateDisplay();
+        }
+
+        function startTimer() {
+            state.timerActive = true;
+            state.timerInterval = setInterval(() => {
+                state.timeLeft--;
+                const m = Math.floor(state.timeLeft / 60).toString().padStart(2, '0');
+                const s = (state.timeLeft % 60).toString().padStart(2, '0');
+                elements.timer.textContent = `${m}:${s}`;
+                if (state.timeLeft <= 0) endGame(false);
+            }, 1000);
+        }
+
+        function setLine(type, r, c, owner) {
+            if (type === 'h') state.hLines[r][c] = owner; else state.vLines[r][c] = owner;
+            const el = document.getElementById(`${type}-${r}-${c}`);
+            if(el) { el.classList.remove('line-empty'); el.classList.add(`bg-${owner}`); el.style.pointerEvents = 'none'; }
+            checkBoxes();
+        }
+
+        function checkBoxes() {
+            for (let r = 0; r < BOXES_SIZE; r++) {
+                for (let c = 0; c < BOXES_SIZE; c++) {
+                    if (state.boxes[r][c] !== null) continue;
+                    if (isBoxClosed(r, c)) {
+                        const sides = [state.hLines[r][c], state.hLines[r+1][c], state.vLines[r][c], state.vLines[r][c+1]];
+                        const hasRed = sides.some(s => s === 'void');
+                        const boxEl = document.getElementById(`box-${r}-${c}`);
+                        boxEl.classList.add('box-claimed');
+                        if (!hasRed) {
+                            state.boxes[r][c] = 'scored'; boxEl.classList.add('box-scored'); boxEl.innerHTML = '<span style="font-size:10px">SAFE</span>'; state.playerScore++;
+                        } else {
+                            state.boxes[r][c] = 'blocked'; boxEl.classList.add('box-blocked'); boxEl.innerHTML = '<span style="font-size:10px">DET</span>';
+                        }
+                    }
+                }
+            }
+        }
+
+        function isBoxClosed(r, c) { return state.hLines[r][c] !== null && state.hLines[r+1][c] !== null && state.vLines[r][c] !== null && state.vLines[r][c+1] !== null; }
+
+        function checkGameOver() {
+            let empty = 0;
+            for (let r = 0; r < GRID_SIZE; r++) for (let c = 0; c < BOXES_SIZE; c++) if (state.hLines[r][c] === null) empty++;
+            for (let r = 0; r < BOXES_SIZE; r++) for (let c = 0; c < GRID_SIZE; c++) if (state.vLines[r][c] === null) empty++;
+            if (empty === 0) endGame(true);
+        }
+
+        function endGame(success) {
+            clearInterval(state.timerInterval);
+            state.isGameOver = true;
+
+            let timeBonus = 0;
+            if (success) {
+                // +0.5 pts for every 10 seconds remaining
+                timeBonus = (Math.floor(state.timeLeft / 10) * 0.5);
+                const finalScore = state.playerScore + timeBonus;
+
+                elements.modalTitle.textContent = "DEVICE DEFUSED";
+                elements.modalTitle.style.color = "var(--selected)";
+                elements.modalBreakdown.textContent = `CELLS: ${state.playerScore} | SPEED BONUS: +${timeBonus.toFixed(1)}`;
+                elements.modalResult.textContent = finalScore.toFixed(1);
+                saveScore(finalScore);
+            } else {
+                elements.modalTitle.textContent = "SYSTEM DETONATED";
+                elements.modalTitle.style.color = "#ef4444";
+                elements.modalBreakdown.textContent = "CRITICAL FAIL: TIME EXPIRED";
+                elements.modalResult.textContent = state.playerScore.toFixed(1);
+            }
+            elements.modal.classList.remove('hidden');
+        }
+
+        function saveScore(score) {
+            const history = JSON.parse(localStorage.getItem('circuit_breaker_history') || '[]');
+            history.unshift({ score: score.toFixed(1), date: new Date().toLocaleString() });
+            localStorage.setItem('circuit_breaker_history', JSON.stringify(history.slice(0, 20)));
+            if(score > state.highScore) {
+                state.highScore = score;
+                localStorage.setItem('circuit_breaker_high', score);
+            }
+        }
+
+        function loadHistory() {
+            const history = JSON.parse(localStorage.getItem('circuit_breaker_history') || '[]');
+            elements.historyBody.innerHTML = history.map(h => `
+                <tr class="border-b-2 border-gray-900 hover:bg-gray-800 transition font-sans">
+                    <td class="p-5 text-[10px] text-gray-500 font-bold uppercase">${h.date}</td>
+                    <td class="p-5 text-right text-2xl font-black" style="color:var(--selected)">${h.score}</td>
+                </tr>
+            `).join('') || `<tr><td colspan="2" class="p-10 text-center text-gray-700 italic uppercase">LOG EMPTY</td></tr>`;
+        }
+
+        function updateHighScoreDisplay() {
+            elements.highScoreDisp.textContent = state.highScore.toFixed(1);
+        }
+
+        function updateDisplay() {
+            elements.playerScore.textContent = state.playerScore.toString().padStart(2, '0');
+            const sel = "#54D8A8";
+            elements.m1.style.backgroundColor = state.moveCycle >= 0 ? sel : '#000';
+            elements.m2.style.backgroundColor = state.moveCycle >= 1 ? sel : '#000';
+            elements.m3.style.backgroundColor = state.moveCycle === 2 ? '#ef4444' : '#000';
+            if (state.moveCycle < 2) {
+                elements.status.textContent = `OVERRIDE WIRE ${state.moveCycle + 1}`;
+                elements.status.style.backgroundColor = sel;
+                elements.status.style.color = "#000";
+            } else {
+                elements.status.textContent = "THERMAL SURGE CYCLE";
+                elements.status.style.backgroundColor = '#ef4444'; elements.status.style.color = '#fff';
+            }
+        }
+
+        function abortMission() { clearInterval(state.timerInterval); showView('menu'); }
+
+        window.onload = () => { updateHighScoreDisplay(); showView('menu'); };
+    </script>
+</body>
+</html>
