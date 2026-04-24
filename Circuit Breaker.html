@@ -324,16 +324,16 @@
 
     <script>
         const MISSION_PROFILES = [
-            { id: "ALPHA-1", seed: 3 }, { id: "BETA-4", seed: 2.2 },
-            { id: "GAMMA-9", seed: 4 }, { id: "SIGMA-X", seed: 5.1 },
-            { id: "OMEGA-0", seed: 6.2 }, { id: "NEON-2", seed: 2.5 },
-            { id: "CYBER-5", seed: 3.5 }, { id: "VOID-8", seed: 4.8 },
-            { id: "PRIME-1", seed: 3.2 }, { id: "TITAN-K", seed: 7.1 },
-            { id: "GHOST-V", seed: 4.2 }, { id: "HYPER-6", seed: 5.5 },
-            { id: "SOLO-Q", seed: 2.8 }, { id: "NEXUS-M", seed: 6.5 },
-            { id: "ZERO-G", seed: 5.2 }, { id: "STORM-Z", seed: 3.8 },
-            { id: "QUARTZ", seed: 2.2 }, { id: "PULSE-W", seed: 4.8 },
-            { id: "ZENITH", seed: 8.2 }, { id: "BLADE-9", seed: 4.4 }
+            { id: "ALPHA-1", seed: 101  }, { id: "BETA-4",  seed: 203  },
+            { id: "GAMMA-9", seed: 307  }, { id: "SIGMA-X", seed: 419  },
+            { id: "OMEGA-0", seed: 523  }, { id: "NEON-2",  seed: 631  },
+            { id: "CYBER-5", seed: 743  }, { id: "VOID-8",  seed: 857  },
+            { id: "PRIME-1", seed: 967  }, { id: "TITAN-K", seed: 1079 },
+            { id: "GHOST-V", seed: 1181 }, { id: "HYPER-6", seed: 1297 },
+            { id: "SOLO-Q",  seed: 1409 }, { id: "NEXUS-M", seed: 1511 },
+            { id: "ZERO-G",  seed: 1627 }, { id: "STORM-Z", seed: 1733 },
+            { id: "QUARTZ",  seed: 1847 }, { id: "PULSE-W", seed: 1951 },
+            { id: "ZENITH",  seed: 2063 }, { id: "BLADE-9", seed: 2179 }
         ];
 
         const GRID_SIZE = 6;
@@ -387,23 +387,33 @@
             elements.missionId.textContent = `DEVICE ID: ${mission.id}`;
             createBoard();
             applyObstacles(mission.seed);
+            markObstacleBoxes();
             updateDisplay();
         }
 
+        function seededRand(seed) {
+            let s = seed % 2147483647;
+            if (s <= 0) s += 2147483646;
+            return () => { s = s * 16807 % 2147483647; return (s - 1) / 2147483646; };
+        }
+
         function applyObstacles(seed) {
-            // Apply perimeter
+            const rand = seededRand(seed);
             for (let c = 0; c < BOXES_SIZE; c++) { setLine('h', 0, c, 'obstacle'); setLine('h', GRID_SIZE - 1, c, 'obstacle'); }
             for (let r = 0; r < BOXES_SIZE; r++) { setLine('v', r, 0, 'obstacle'); setLine('v', r, GRID_SIZE - 1, 'obstacle'); }
+            for (let r = 1; r < GRID_SIZE - 1; r++)
+                for (let c = 0; c < BOXES_SIZE; c++)
+                    if (rand() < 0.22) setLine('h', r, c, 'obstacle');
+            for (let r = 0; r < BOXES_SIZE; r++)
+                for (let c = 1; c < GRID_SIZE - 1; c++)
+                    if (rand() < 0.22) setLine('v', r, c, 'obstacle');
+        }
 
-            let count = 1;
-            for (let r = 0; r < GRID_SIZE; r++) {
-                for (let c = 0; c < BOXES_SIZE; c++) {
-                    if (state.hLines[r][c] === null) {
-                        if (Math.floor(count % seed) === 0) setLine('h', r, c, 'obstacle');
-                        count++;
-                    }
-                }
-            }
+        function markObstacleBoxes() {
+            for (let r = 0; r < BOXES_SIZE; r++)
+                for (let c = 0; c < BOXES_SIZE; c++)
+                    if (state.boxes[r][c] === null && isBoxClosed(r, c))
+                        state.boxes[r][c] = 'sealed';
         }
 
         function createBoard() {
@@ -450,6 +460,7 @@
             if (!state.timerActive) startTimer();
             const owner = (state.moveCycle < 2) ? 'player' : 'void';
             setLine(type, r, c, owner);
+            checkBoxes();
             state.moveCycle = (state.moveCycle + 1) % 3;
             checkGameOver();
             updateDisplay();
@@ -470,7 +481,6 @@
             if (type === 'h') state.hLines[r][c] = owner; else state.vLines[r][c] = owner;
             const el = document.getElementById(`${type}-${r}-${c}`);
             if(el) { el.classList.remove('line-empty'); el.classList.add(`bg-${owner}`); el.style.pointerEvents = 'none'; }
-            checkBoxes();
         }
 
         function checkBoxes() {
@@ -537,12 +547,25 @@
 
         function loadHistory() {
             const history = JSON.parse(localStorage.getItem('circuit_breaker_history') || '[]');
-            elements.historyBody.innerHTML = history.map(h => `
-                <tr class="border-b-2 border-gray-900 hover:bg-gray-800 transition font-sans">
-                    <td class="p-5 text-[10px] text-gray-500 font-bold uppercase">${h.date}</td>
-                    <td class="p-5 text-right text-2xl font-black" style="color:var(--selected)">${h.score}</td>
-                </tr>
-            `).join('') || `<tr><td colspan="2" class="p-10 text-center text-gray-700 italic uppercase">LOG EMPTY</td></tr>`;
+            if (!history.length) {
+                elements.historyBody.innerHTML = `<tr><td colspan="2" class="p-10 text-center text-gray-700 italic uppercase">LOG EMPTY</td></tr>`;
+                return;
+            }
+            elements.historyBody.innerHTML = '';
+            history.forEach(h => {
+                const tr = document.createElement('tr');
+                tr.className = 'border-b-2 border-gray-900 hover:bg-gray-800 transition font-sans';
+                const tdDate = document.createElement('td');
+                tdDate.className = 'p-5 text-[10px] text-gray-500 font-bold uppercase';
+                tdDate.textContent = h.date;
+                const tdScore = document.createElement('td');
+                tdScore.className = 'p-5 text-right text-2xl font-black';
+                tdScore.style.color = 'var(--selected)';
+                tdScore.textContent = h.score;
+                tr.appendChild(tdDate);
+                tr.appendChild(tdScore);
+                elements.historyBody.appendChild(tr);
+            });
         }
 
         function updateHighScoreDisplay() {
@@ -552,7 +575,7 @@
         function updateDisplay() {
             elements.playerScore.textContent = state.playerScore.toString().padStart(2, '0');
             const sel = "#54D8A8";
-            elements.m1.style.backgroundColor = state.moveCycle >= 0 ? sel : '#000';
+            elements.m1.style.backgroundColor = state.moveCycle === 0 ? sel : '#000';
             elements.m2.style.backgroundColor = state.moveCycle >= 1 ? sel : '#000';
             elements.m3.style.backgroundColor = state.moveCycle === 2 ? '#ef4444' : '#000';
             if (state.moveCycle < 2) {
