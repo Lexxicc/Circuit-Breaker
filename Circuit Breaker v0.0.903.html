@@ -193,33 +193,42 @@
 <body>
 
     <!-- MENU VIEW -->
-    <div id="view-menu" class="view-section view-active py-24 px-4">
-        <div class="mb-16 text-center">
+    <div id="view-menu" class="view-section view-active py-16 px-4">
+        <div class="mb-10 text-center">
             <h1 class="text-6xl md:text-7xl font-black mb-2 italic" style="color:var(--notify); text-shadow: 8px 8px 0px #000;">CIRCUIT</h1>
             <h1 class="text-6xl md:text-7xl font-black italic" style="color:var(--presence); text-shadow: 8px 8px 0px #000;">BREAKER</h1>
-            <p class="mt-4 text-xs font-bold text-slate-500 tracking-[0.4em] uppercase">EOD DEFUSAL UNIT - 8-BIT</p>
         </div>
 
-        <div class="space-y-8 w-full max-w-xs">
+        <div class="space-y-4 w-full max-w-xs">
             <button onclick="showView('game')" class="btn-arcade w-full text-2xl flex justify-between items-center px-6">
                 <span>NEW MISSION</span>
                 <span>></span>
             </button>
             <button onclick="showView('rules')" class="btn-arcade w-full text-2xl flex justify-between items-center px-6">
-                <span>PROTOCOL (RULES)</span>
+                <span>PROTOCOL</span>
                 <span>?</span>
             </button>
             <button onclick="showView('history')" class="btn-arcade w-full text-2xl flex justify-between items-center px-6">
                 <span>LOGS</span>
                 <span>#</span>
             </button>
+            <button onclick="showView('patchnotes')" class="btn-arcade w-full text-2xl flex justify-between items-center px-6">
+                <span>PATCH NOTES</span>
+                <span>*</span>
+            </button>
+            <button onclick="showView('settings')" class="btn-arcade w-full text-2xl flex justify-between items-center px-6">
+                <span>SETTINGS</span>
+                <span>=</span>
+            </button>
         </div>
 
-        <div class="mt-20 p-6 border-4 border-black bg-gray-950 text-center shadow-[8px_8px_0px_#000] w-full max-w-xs">
+        <div class="mt-8 p-6 border-4 border-black bg-gray-950 text-center shadow-[8px_8px_0px_#000] w-full max-w-xs">
             <span class="text-[10px] text-gray-500 uppercase block mb-2">RECORD SCORE</span>
             <span id="high-score-display" class="text-6xl text-white">00</span>
             <span id="tier-badge" class="text-xs font-black uppercase tracking-widest mt-2 block"></span>
         </div>
+
+        <p class="mt-8 text-xs font-bold text-slate-600 tracking-[0.4em] uppercase">EOD DEFUSAL UNIT - 8-BIT</p>
     </div>
 
     <!-- GAME VIEW -->
@@ -325,6 +334,88 @@
                 </thead>
                 <tbody id="history-table-body"></tbody>
             </table>
+        </div>
+        <button onclick="showView('menu')" class="btn-arcade mt-12 w-full max-w-xs text-2xl">BACK TO CORE</button>
+    </div>
+
+    <!-- PATCH NOTES VIEW -->
+    <div id="view-patchnotes" class="view-section py-20 px-6">
+        <h2 class="text-5xl font-black mb-10 text-center" style="color:var(--notify); text-shadow: 6px 6px 0px #000;">PATCH NOTES</h2>
+        <div class="bg-black border-4 border-gray-800 p-2 max-h-[520px] overflow-y-auto shadow-[10px_10px_0px_#000] w-full max-w-lg">
+            <div class="p-6 space-y-8 text-gray-300">
+                <div>
+                    <div class="text-[10px] text-gray-600 uppercase font-bold mb-1">v0.0.903</div>
+                    <h3 class="text-white font-bold uppercase tracking-wider mb-2">CURRENT BUILD</h3>
+                    <ul class="text-xs space-y-1 text-gray-400">
+                        <li>— Patch notes + Settings added to main menu</li>
+                        <li>— Menu UI refitted, tagline repositioned</li>
+                    </ul>
+                </div>
+                <div class="border-t-2 border-gray-900 pt-6">
+                    <div class="text-[10px] text-gray-600 uppercase font-bold mb-1">v0.0.902</div>
+                    <h3 class="text-white font-bold uppercase tracking-wider mb-2">ASYNC CHALLENGE SYSTEM</h3>
+                    <ul class="text-xs space-y-1 text-gray-400">
+                        <li>— Shareable challenge links via URL hash</li>
+                        <li>— Both players play identical board (same seed)</li>
+                        <li>— 72-hour match expiry</li>
+                        <li>— Side-by-side result screen with WIN / LOSE / DRAW</li>
+                        <li>— Bot detection (speed + cadence analysis) runs silently</li>
+                        <li>— Mission ID shown in game-over modal</li>
+                        <li>— Score tier badges: Bronze / Silver / Gold</li>
+                        <li>— Stats panel: missions, win rate, avg score, fastest clear</li>
+                        <li>— History log: TYPE column, opponent score, match result</li>
+                        <li>— Seeded PRNG replaces float modulo obstacle system</li>
+                        <li>— Obstacles now placed on both horizontal and vertical lines</li>
+                        <li>— Move indicator bug fixes (m1/m2 always-lit)</li>
+                    </ul>
+                </div>
+                <div class="border-t-2 border-gray-900 pt-6">
+                    <div class="text-[10px] text-gray-600 uppercase font-bold mb-1">v0.0.901</div>
+                    <h3 class="text-white font-bold uppercase tracking-wider mb-2">INITIAL RELEASE</h3>
+                    <ul class="text-xs space-y-1 text-gray-400">
+                        <li>— Dots and boxes core gameplay with wire cycle mechanic</li>
+                        <li>— 2 blue override wires + 1 red surge wire per cycle</li>
+                        <li>— Red surge wire touching a cell = 0 points for that cell</li>
+                        <li>— 120s timer with speed bonus (+0.5 pts per 10s remaining)</li>
+                        <li>— 20 seeded mission profiles</li>
+                        <li>— Perimeter obstacle borders + interior obstacle scatter</li>
+                        <li>— Mission log with score history</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <button onclick="showView('menu')" class="btn-arcade mt-12 w-full max-w-xs text-2xl">BACK TO CORE</button>
+    </div>
+
+    <!-- SETTINGS VIEW -->
+    <div id="view-settings" class="view-section py-20 px-6">
+        <h2 class="text-5xl font-black mb-10 text-center" style="color:var(--selected); text-shadow: 6px 6px 0px #000;">SETTINGS</h2>
+        <div class="bg-black border-4 border-gray-800 p-8 space-y-6 shadow-[10px_10px_0px_#000] w-full max-w-lg">
+            <div class="flex justify-between items-center border-b-2 border-gray-900 pb-6">
+                <div>
+                    <div class="text-white font-bold uppercase text-sm tracking-wider">CLEAR MISSION LOG</div>
+                    <div class="text-[10px] text-gray-600 uppercase mt-1">Wipe all score history</div>
+                </div>
+                <button onclick="clearHistory()" class="text-xs uppercase px-4 py-2 border-4 border-red-900 bg-black font-black shadow-[4px_4px_0px_#000]" style="color:#ef4444;">WIPE</button>
+            </div>
+            <div class="flex justify-between items-center border-b-2 border-gray-900 pb-6">
+                <div>
+                    <div class="text-white font-bold uppercase text-sm tracking-wider">CLEAR STATS</div>
+                    <div class="text-[10px] text-gray-600 uppercase mt-1">Reset all mission statistics</div>
+                </div>
+                <button onclick="clearStats()" class="text-xs uppercase px-4 py-2 border-4 border-red-900 bg-black font-black shadow-[4px_4px_0px_#000]" style="color:#ef4444;">WIPE</button>
+            </div>
+            <div class="flex justify-between items-center border-b-2 border-gray-900 pb-6">
+                <div>
+                    <div class="text-white font-bold uppercase text-sm tracking-wider">CLEAR HIGH SCORE</div>
+                    <div class="text-[10px] text-gray-600 uppercase mt-1">Reset record score</div>
+                </div>
+                <button onclick="clearHighScore()" class="text-xs uppercase px-4 py-2 border-4 border-red-900 bg-black font-black shadow-[4px_4px_0px_#000]" style="color:#ef4444;">WIPE</button>
+            </div>
+            <div class="flex justify-between items-center pt-2">
+                <div class="text-[10px] text-gray-600 uppercase font-bold">VERSION</div>
+                <div class="text-[10px] text-gray-500 uppercase font-bold">v0.0.903</div>
+            </div>
         </div>
         <button onclick="showView('menu')" class="btn-arcade mt-12 w-full max-w-xs text-2xl">BACK TO CORE</button>
     </div>
@@ -876,6 +967,26 @@
                 elements.status.textContent = "THERMAL SURGE CYCLE";
                 elements.status.style.backgroundColor = '#ef4444'; elements.status.style.color = '#fff';
             }
+        }
+
+        function clearHistory() {
+            if (!confirm('Wipe all mission log history?')) return;
+            localStorage.removeItem('circuit_breaker_history');
+            alert('Mission log cleared.');
+        }
+
+        function clearStats() {
+            if (!confirm('Reset all stats?')) return;
+            localStorage.removeItem('circuit_breaker_stats');
+            alert('Stats reset.');
+        }
+
+        function clearHighScore() {
+            if (!confirm('Reset high score?')) return;
+            localStorage.removeItem('circuit_breaker_high');
+            state.highScore = 0;
+            updateHighScoreDisplay();
+            alert('High score cleared.');
         }
 
         function abortMission() {
