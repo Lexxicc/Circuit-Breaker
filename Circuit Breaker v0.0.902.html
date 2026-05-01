@@ -482,7 +482,7 @@
             state.flagged = false;
             state.lastFinalScore = 0;
             if (!state.isChallenge) {
-                state.matchSeed = (Date.now() ^ (Math.random() * 0xFFFFFFFF | 0)) >>> 0;
+                state.matchSeed = Math.floor(Math.random() * 2147483646) + 1;
             }
             state.hLines = Array(GRID_SIZE).fill().map(() => Array(BOXES_SIZE).fill(null));
             state.vLines = Array(BOXES_SIZE).fill().map(() => Array(GRID_SIZE).fill(null));
@@ -571,6 +571,8 @@
 
         function handleLineClick(type, r, c) {
             if (state.isGameOver) return;
+            const existing = type === 'h' ? state.hLines[r][c] : state.vLines[r][c];
+            if (existing !== null) return;
             state.moveTimes.push(Date.now());
             if (!state.timerActive) startTimer();
             const owner = (state.moveCycle < 2) ? 'player' : 'void';
@@ -593,6 +595,8 @@
         }
 
         function setLine(type, r, c, owner) {
+            const alreadySet = type === 'h' ? state.hLines[r][c] : state.vLines[r][c];
+            if (alreadySet !== null) return;
             if (type === 'h') state.hLines[r][c] = owner; else state.vLines[r][c] = owner;
             const el = document.getElementById(`${type}-${r}-${c}`);
             if(el) { el.classList.remove('line-empty'); el.classList.add(`bg-${owner}`); el.style.pointerEvents = 'none'; }
@@ -676,14 +680,30 @@
                 }
             } else {
                 saveStats(stats);
-                document.getElementById('modal-mission').textContent = `DEVICE ID: ${missionId}`;
-                document.getElementById('modal-title').textContent = 'SYSTEM DETONATED';
-                document.getElementById('modal-title').style.color = '#ef4444';
-                document.getElementById('modal-breakdown').textContent = 'CRITICAL FAIL: TIME EXPIRED';
-                document.getElementById('modal-result').textContent = state.playerScore.toFixed(1);
-                // flag retained silently
-                document.getElementById('challenge-btn').style.display = 'none';
-                saveScore(state.playerScore, 'SOLO', null, 'FAIL', state.flagged, false);
+                if (state.isChallenge && state.p1Data) {
+                    const p1Score = state.p1Data.p1Score;
+                    const finalScore = state.playerScore;
+                    const won = finalScore > p1Score;
+                    const tied = finalScore === p1Score;
+                    const verdict = document.getElementById('modal-verdict');
+                    verdict.textContent = tied ? 'DRAW' : won ? 'YOU WIN' : 'YOU LOSE';
+                    verdict.style.color = tied ? 'var(--selected)' : won ? '#fbbf24' : '#ef4444';
+                    document.getElementById('modal-mission-p2').textContent = `DEVICE ID: ${missionId}`;
+                    document.getElementById('result-p1-score').textContent = parseFloat(p1Score).toFixed(1);
+                    document.getElementById('result-p2-score').textContent = finalScore.toFixed(1);
+                    document.getElementById('go-p1').classList.add('hidden');
+                    document.getElementById('go-p2').classList.remove('hidden');
+                    saveScore(finalScore, 'CHALLENGE', p1Score, won ? 'WIN' : tied ? 'DRAW' : 'LOSS', state.flagged, state.p1Data.p1Flagged);
+                } else {
+                    document.getElementById('modal-mission').textContent = `DEVICE ID: ${missionId}`;
+                    document.getElementById('modal-title').textContent = 'SYSTEM DETONATED';
+                    document.getElementById('modal-title').style.color = '#ef4444';
+                    document.getElementById('modal-breakdown').textContent = 'CRITICAL FAIL: TIME EXPIRED';
+                    document.getElementById('modal-result').textContent = state.playerScore.toFixed(1);
+                    // flag retained silently
+                    document.getElementById('challenge-btn').style.display = 'none';
+                    saveScore(state.playerScore, 'SOLO', null, 'FAIL', state.flagged, false);
+                }
             }
 
             elements.modal.classList.remove('hidden');
@@ -725,7 +745,7 @@
                 const btn = document.getElementById('challenge-btn');
                 btn.textContent = 'COPIED!';
                 setTimeout(() => btn.textContent = 'COPY CHALLENGE LINK', 2000);
-            });
+            }).catch(err => { /* clipboard unavailable — silent fallback */ });
         }
 
         function initMatch() {
@@ -763,6 +783,7 @@
             state.isChallenge = false;
             state.p1Data = null;
             resetGame();
+            showView('game');
         }
 
         function saveScore(score, matchType, opponentScore, result, flagged, opponentFlagged) {
@@ -844,9 +865,9 @@
         function updateDisplay() {
             elements.playerScore.textContent = state.playerScore.toString().padStart(2, '0');
             const sel = "#54D8A8";
-            elements.m1.style.backgroundColor = state.moveCycle === 0 ? sel : '#000';
-            elements.m2.style.backgroundColor = state.moveCycle === 1 ? sel : '#000';
-            elements.m3.style.backgroundColor = state.moveCycle === 2 ? '#ef4444' : '#000';
+            elements.m1.style.backgroundColor = state.moveCycle >= 0 ? sel : '#000';
+            elements.m2.style.backgroundColor = state.moveCycle >= 1 ? sel : '#000';
+            elements.m3.style.backgroundColor = state.moveCycle >= 2 ? '#ef4444' : '#000';
             if (state.moveCycle < 2) {
                 elements.status.textContent = `OVERRIDE WIRE ${state.moveCycle + 1}`;
                 elements.status.style.backgroundColor = sel;
@@ -866,6 +887,6 @@
 
         window.onload = () => { updateHighScoreDisplay(); initMatch(); };
     </script>
-    <p style="font-size:10px;text-align:center;opacity:0.4;padding:8px;letter-spacing:0.3em;text-transform:uppercase;">&copy; Tacticon Studios 2026 &mdash; v0.0.901</p>
+    <p style="font-size:10px;text-align:center;opacity:0.4;padding:8px;letter-spacing:0.3em;text-transform:uppercase;">&copy; Tacticon Studios 2026 &mdash; v0.0.902</p>
 </body>
 </html>
