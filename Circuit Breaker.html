@@ -218,6 +218,7 @@
         <div class="mt-20 p-6 border-4 border-black bg-gray-950 text-center shadow-[8px_8px_0px_#000] w-full max-w-xs">
             <span class="text-[10px] text-gray-500 uppercase block mb-2">RECORD SCORE</span>
             <span id="high-score-display" class="text-6xl text-white">00</span>
+            <span id="tier-badge" class="text-xs font-black uppercase tracking-widest mt-2 block"></span>
         </div>
     </div>
 
@@ -295,6 +296,24 @@
     <!-- HISTORY VIEW -->
     <div id="view-history" class="view-section py-20 px-6">
         <h2 class="text-5xl font-black mb-10 text-center" style="color:var(--presence); text-shadow: 6px 6px 0px #000;">MISSION LOG</h2>
+        <div class="grid grid-cols-2 gap-0 bg-black border-4 border-gray-800 mb-4 shadow-[10px_10px_0px_#000] w-full max-w-lg">
+            <div class="p-4 border-r-2 border-b-2 border-gray-800 flex flex-col items-center">
+                <span class="text-[9px] text-gray-600 uppercase font-bold mb-1">MISSIONS</span>
+                <span id="stat-played" class="text-2xl font-black text-white">0</span>
+            </div>
+            <div class="p-4 border-b-2 border-gray-800 flex flex-col items-center">
+                <span class="text-[9px] text-gray-600 uppercase font-bold mb-1">WIN RATE</span>
+                <span id="stat-winrate" class="text-2xl font-black" style="color:var(--selected)">0%</span>
+            </div>
+            <div class="p-4 border-r-2 border-gray-800 flex flex-col items-center">
+                <span class="text-[9px] text-gray-600 uppercase font-bold mb-1">AVG SCORE</span>
+                <span id="stat-avg" class="text-2xl font-black" style="color:var(--presence)">0.0</span>
+            </div>
+            <div class="p-4 flex flex-col items-center">
+                <span class="text-[9px] text-gray-600 uppercase font-bold mb-1">FASTEST</span>
+                <span id="stat-fastest" class="text-2xl font-black text-white">--:--</span>
+            </div>
+        </div>
         <div class="bg-black border-4 border-gray-800 p-2 max-h-[440px] overflow-y-auto shadow-[10px_10px_0px_#000] w-full max-w-lg">
             <table class="w-full text-left font-sans">
                 <thead>
@@ -312,6 +331,7 @@
     <!-- GAME OVER MODAL -->
     <div id="game-over-modal" class="fixed inset-0 bg-black/95 flex items-center justify-center z-[200] hidden">
         <div class="bg-gray-900 p-12 border-8 border-black shadow-[20px_20px_0px_rgba(0,0,0,0.5)] text-center max-w-sm w-full mx-4">
+            <div id="modal-mission" class="text-[9px] text-gray-600 uppercase font-bold tracking-widest mb-1"></div>
             <h2 id="modal-title" class="text-4xl font-black mb-4 uppercase italic">DEVICE DEFUSED</h2>
             <div id="modal-breakdown" class="text-[10px] text-gray-400 mb-4 uppercase font-bold">CELLS: 0 | BONUS: 0</div>
             <div class="text-[10px] font-bold text-gray-500 uppercase">FINAL SCORE</div>
@@ -343,8 +363,9 @@
         const state = {
             hLines: [], vLines: [], boxes: [],
             playerScore: 0, moveCycle: 0,
-            isGameOver: false, timeLeft: 120, // Reduced to 2 minutes
+            isGameOver: false, timeLeft: 120,
             timerInterval: null, timerActive: false,
+            currentMission: null,
             highScore: parseFloat(localStorage.getItem('circuit_breaker_high')) || 0
         };
 
@@ -360,13 +381,19 @@
             modalBreakdown: document.getElementById('modal-breakdown'),
             m1: document.getElementById('m1'), m2: document.getElementById('m2'), m3: document.getElementById('m3'),
             highScoreDisp: document.getElementById('high-score-display'),
-            historyBody: document.getElementById('history-table-body')
+            tierBadge: document.getElementById('tier-badge'),
+            historyBody: document.getElementById('history-table-body'),
+            modalMission: document.getElementById('modal-mission'),
+            statPlayed: document.getElementById('stat-played'),
+            statWinrate: document.getElementById('stat-winrate'),
+            statAvg: document.getElementById('stat-avg'),
+            statFastest: document.getElementById('stat-fastest')
         };
 
         function showView(viewId) {
             document.querySelectorAll('.view-section').forEach(v => v.classList.remove('view-active'));
             document.getElementById('view-' + viewId).classList.add('view-active');
-            if(viewId === 'history') loadHistory();
+            if(viewId === 'history') { loadHistory(); loadStats(); }
             if(viewId === 'menu') updateHighScoreDisplay();
             if(viewId === 'game') resetGame();
         }
@@ -384,11 +411,19 @@
             elements.timer.textContent = "02:00";
             elements.modal.classList.add('hidden');
             const mission = MISSION_PROFILES[Math.floor(Math.random() * MISSION_PROFILES.length)];
+            state.currentMission = mission;
             elements.missionId.textContent = `DEVICE ID: ${mission.id}`;
             createBoard();
             applyObstacles(mission.seed);
             markObstacleBoxes();
             updateDisplay();
+        }
+
+        function getTier(score) {
+            if (score >= 20) return { label: 'GOLD',   color: '#fbbf24' };
+            if (score >= 12) return { label: 'SILVER', color: '#cbd5e1' };
+            if (score >= 5)  return { label: 'BRONZE', color: '#b45309' };
+            return null;
         }
 
         function seededRand(seed) {
@@ -516,11 +551,20 @@
             clearInterval(state.timerInterval);
             state.isGameOver = true;
 
-            let timeBonus = 0;
+            const missionLabel = state.currentMission ? `DEVICE ID: ${state.currentMission.id}` : '';
+            elements.modalMission.textContent = missionLabel;
+
+            const stats = getStats();
+            stats.gamesPlayed++;
+
             if (success) {
-                // +0.5 pts for every 10 seconds remaining
-                timeBonus = (Math.floor(state.timeLeft / 10) * 0.5);
+                const timeBonus = (Math.floor(state.timeLeft / 10) * 0.5);
                 const finalScore = state.playerScore + timeBonus;
+
+                stats.wins++;
+                stats.totalScore += finalScore;
+                const timeUsed = 120 - state.timeLeft;
+                if (stats.fastestClear === null || timeUsed < stats.fastestClear) stats.fastestClear = timeUsed;
 
                 elements.modalTitle.textContent = "DEVICE DEFUSED";
                 elements.modalTitle.style.color = "var(--selected)";
@@ -533,7 +577,32 @@
                 elements.modalBreakdown.textContent = "CRITICAL FAIL: TIME EXPIRED";
                 elements.modalResult.textContent = state.playerScore.toFixed(1);
             }
+
+            saveStats(stats);
             elements.modal.classList.remove('hidden');
+        }
+
+        function getStats() {
+            return JSON.parse(localStorage.getItem('circuit_breaker_stats') || '{"gamesPlayed":0,"wins":0,"totalScore":0,"fastestClear":null}');
+        }
+
+        function saveStats(stats) {
+            localStorage.setItem('circuit_breaker_stats', JSON.stringify(stats));
+        }
+
+        function loadStats() {
+            const stats = getStats();
+            elements.statPlayed.textContent = stats.gamesPlayed;
+            const winRate = stats.gamesPlayed > 0 ? Math.round((stats.wins / stats.gamesPlayed) * 100) : 0;
+            elements.statWinrate.textContent = `${winRate}%`;
+            elements.statAvg.textContent = stats.wins > 0 ? (stats.totalScore / stats.wins).toFixed(1) : '0.0';
+            if (stats.fastestClear !== null) {
+                const m = Math.floor(stats.fastestClear / 60).toString().padStart(2, '0');
+                const s = (stats.fastestClear % 60).toString().padStart(2, '0');
+                elements.statFastest.textContent = `${m}:${s}`;
+            } else {
+                elements.statFastest.textContent = '--:--';
+            }
         }
 
         function saveScore(score) {
@@ -571,6 +640,13 @@
 
         function updateHighScoreDisplay() {
             elements.highScoreDisp.textContent = state.highScore.toFixed(1);
+            const tier = getTier(state.highScore);
+            if (tier) {
+                elements.tierBadge.textContent = `▲ ${tier.label}`;
+                elements.tierBadge.style.color = tier.color;
+            } else {
+                elements.tierBadge.textContent = '';
+            }
         }
 
         function updateDisplay() {
