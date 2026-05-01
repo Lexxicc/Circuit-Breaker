@@ -318,8 +318,9 @@
             <table class="w-full text-left font-sans">
                 <thead>
                     <tr class="text-[10px] text-gray-600 uppercase border-b-2 border-gray-800 font-bold">
-                        <th class="p-5">TIMESTAMP</th>
-                        <th class="p-5 text-right">SCORE</th>
+                        <th class="p-3">TIMESTAMP</th>
+                        <th class="p-3 text-center">TYPE</th>
+                        <th class="p-3 text-right">SCORE</th>
                     </tr>
                 </thead>
                 <tbody id="history-table-body"></tbody>
@@ -331,13 +332,64 @@
     <!-- GAME OVER MODAL -->
     <div id="game-over-modal" class="fixed inset-0 bg-black/95 flex items-center justify-center z-[200] hidden">
         <div class="bg-gray-900 p-12 border-8 border-black shadow-[20px_20px_0px_rgba(0,0,0,0.5)] text-center max-w-sm w-full mx-4">
-            <div id="modal-mission" class="text-[9px] text-gray-600 uppercase font-bold tracking-widest mb-1"></div>
-            <h2 id="modal-title" class="text-4xl font-black mb-4 uppercase italic">DEVICE DEFUSED</h2>
-            <div id="modal-breakdown" class="text-[10px] text-gray-400 mb-4 uppercase font-bold">CELLS: 0 | BONUS: 0</div>
-            <div class="text-[10px] font-bold text-gray-500 uppercase">FINAL SCORE</div>
-            <div id="modal-result" class="text-9xl font-black mb-10" style="color:var(--presence);">00</div>
-            <button onclick="resetGame()" class="w-full py-5 border-4 border-black font-black uppercase tracking-widest text-lg shadow-[6px_6px_0px_#000]" style="background-color: var(--selected); color: #000;">
-                NEXT MISSION
+            <!-- P1 / Solo view -->
+            <div id="go-p1">
+                <div id="modal-mission" class="text-[9px] text-gray-600 uppercase font-bold tracking-widest mb-1"></div>
+                <h2 id="modal-title" class="text-4xl font-black mb-4 uppercase italic">DEVICE DEFUSED</h2>
+                <div id="modal-breakdown" class="text-[10px] text-gray-400 mb-4 uppercase font-bold">CELLS: 0 | BONUS: 0</div>
+                <div class="text-[10px] font-bold text-gray-500 uppercase">FINAL SCORE</div>
+                <div id="modal-result" class="text-9xl font-black mb-4" style="color:var(--presence);">00</div>
+                <div id="modal-flag" class="text-[10px] text-yellow-400 uppercase font-bold mb-6 hidden">⚠ SUSPICIOUS ACTIVITY DETECTED</div>
+                <button onclick="copyChallenge()" id="challenge-btn" class="w-full py-4 border-4 border-black font-black uppercase tracking-widest text-base shadow-[6px_6px_0px_#000] mb-3" style="background-color: var(--selected); color: #000;">
+                    COPY CHALLENGE LINK
+                </button>
+                <button onclick="newMission()" class="w-full py-3 border-4 border-gray-700 font-black uppercase tracking-widest text-sm bg-black" style="color: var(--selected);">
+                    NEW MISSION
+                </button>
+            </div>
+            <!-- P2 / Result view -->
+            <div id="go-p2" class="hidden">
+                <div id="modal-mission-p2" class="text-[9px] text-gray-600 uppercase font-bold tracking-widest mb-1"></div>
+                <h2 id="modal-verdict" class="text-5xl font-black mb-6 uppercase italic">YOU WIN</h2>
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <div class="bg-black border-4 border-gray-800 p-4">
+                        <div class="text-[9px] text-gray-600 uppercase font-bold mb-1">THEM</div>
+                        <div id="result-p1-score" class="text-3xl font-black" style="color:var(--presence);">--</div>
+                        <div id="result-p1-flag" class="text-[8px] text-yellow-400 uppercase mt-1 hidden">⚠ FLAGGED</div>
+                    </div>
+                    <div class="bg-black border-4 border-gray-800 p-4">
+                        <div class="text-[9px] text-gray-600 uppercase font-bold mb-1">YOU</div>
+                        <div id="result-p2-score" class="text-3xl font-black" style="color:var(--selected);">--</div>
+                        <div id="result-p2-flag" class="text-[8px] text-yellow-400 uppercase mt-1 hidden">⚠ FLAGGED</div>
+                    </div>
+                </div>
+                <button onclick="newMission()" class="w-full py-5 border-4 border-black font-black uppercase tracking-widest text-lg shadow-[6px_6px_0px_#000]" style="background-color: var(--selected); color: #000;">
+                    NEW MISSION
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CHALLENGE MODAL -->
+    <div id="challenge-modal" class="fixed inset-0 bg-black/98 flex items-center justify-center z-[200] hidden">
+        <div class="bg-gray-900 p-12 border-8 border-black shadow-[20px_20px_0px_rgba(0,0,0,0.5)] text-center max-w-sm w-full mx-4">
+            <div id="challenge-device-id" class="text-[9px] text-gray-600 uppercase font-bold tracking-widest mb-2"></div>
+            <h2 class="text-4xl font-black mb-4 uppercase italic" style="color:var(--notify);">CHALLENGE</h2>
+            <p class="text-xs text-gray-400 uppercase mb-2">YOUR OPPONENT HAS COMPLETED THEIR ROUND</p>
+            <p class="text-[10px] text-gray-600 uppercase mb-8">DON'T PEEK — BEAT THEIR SCORE FIRST</p>
+            <button onclick="acceptChallenge()" class="w-full py-5 border-4 border-black font-black uppercase tracking-widest text-lg shadow-[6px_6px_0px_#000]" style="background-color: var(--selected); color: #000;">
+                ACCEPT MISSION
+            </button>
+        </div>
+    </div>
+
+    <!-- EXPIRED MODAL -->
+    <div id="expired-modal" class="fixed inset-0 bg-black/98 flex items-center justify-center z-[200] hidden">
+        <div class="bg-gray-900 p-12 border-8 border-black shadow-[20px_20px_0px_rgba(0,0,0,0.5)] text-center max-w-sm w-full mx-4">
+            <h2 class="text-4xl font-black mb-4 uppercase italic" style="color:#ef4444;">EXPIRED</h2>
+            <p class="text-xs text-gray-400 uppercase mb-8">THIS CHALLENGE HAS EXPIRED (72 HOURS)</p>
+            <button onclick="location.href=location.href.split('#')[0]" class="w-full py-5 border-4 border-black font-black uppercase tracking-widest text-lg shadow-[6px_6px_0px_#000]" style="background-color: var(--selected); color: #000;">
+                NEW MISSION
             </button>
         </div>
     </div>
@@ -359,6 +411,7 @@
         const GRID_SIZE = 6;
         const BOXES_SIZE = GRID_SIZE - 1;
         const GAP = 60;
+        const MATCH_TTL = 72 * 60 * 60 * 1000;
 
         const state = {
             hLines: [], vLines: [], boxes: [],
@@ -366,6 +419,12 @@
             isGameOver: false, timeLeft: 120,
             timerInterval: null, timerActive: false,
             currentMission: null,
+            matchSeed: 0,
+            isChallenge: false,
+            p1Data: null,
+            moveTimes: [],
+            flagged: false,
+            lastFinalScore: 0,
             highScore: parseFloat(localStorage.getItem('circuit_breaker_high')) || 0
         };
 
@@ -398,23 +457,43 @@
             if(viewId === 'game') resetGame();
         }
 
+        function getMissionFromSeed(seed) {
+            return MISSION_PROFILES[seed % MISSION_PROFILES.length];
+        }
+
+        function checkBotFlag(moveTimes) {
+            if (moveTimes.length < 2) return false;
+            const gaps = [];
+            for (let i = 1; i < moveTimes.length; i++) gaps.push(moveTimes[i] - moveTimes[i - 1]);
+            if (gaps.some(g => g < 300)) return true;
+            const mean = gaps.reduce((a, b) => a + b, 0) / gaps.length;
+            const stdDev = Math.sqrt(gaps.reduce((a, b) => a + (b - mean) ** 2, 0) / gaps.length);
+            return stdDev < 80;
+        }
+
         function resetGame() {
             clearInterval(state.timerInterval);
             state.timerActive = false;
-            state.timeLeft = 120; // 2 Minutes
+            state.timeLeft = 120;
             state.isGameOver = false;
             state.playerScore = 0;
             state.moveCycle = 0;
+            state.moveTimes = [];
+            state.flagged = false;
+            state.lastFinalScore = 0;
+            if (!state.isChallenge) {
+                state.matchSeed = (Date.now() ^ (Math.random() * 0xFFFFFFFF | 0)) >>> 0;
+            }
             state.hLines = Array(GRID_SIZE).fill().map(() => Array(BOXES_SIZE).fill(null));
             state.vLines = Array(BOXES_SIZE).fill().map(() => Array(GRID_SIZE).fill(null));
             state.boxes = Array(BOXES_SIZE).fill().map(() => Array(BOXES_SIZE).fill(null));
             elements.timer.textContent = "02:00";
             elements.modal.classList.add('hidden');
-            const mission = MISSION_PROFILES[Math.floor(Math.random() * MISSION_PROFILES.length)];
+            const mission = getMissionFromSeed(state.matchSeed);
             state.currentMission = mission;
             elements.missionId.textContent = `DEVICE ID: ${mission.id}`;
             createBoard();
-            applyObstacles(mission.seed);
+            applyObstacles(state.matchSeed);
             markObstacleBoxes();
             updateDisplay();
         }
@@ -492,6 +571,7 @@
 
         function handleLineClick(type, r, c) {
             if (state.isGameOver) return;
+            state.moveTimes.push(Date.now());
             if (!state.timerActive) startTimer();
             const owner = (state.moveCycle < 2) ? 'player' : 'void';
             setLine(type, r, c, owner);
@@ -550,35 +630,63 @@
         function endGame(success) {
             clearInterval(state.timerInterval);
             state.isGameOver = true;
-
-            const missionLabel = state.currentMission ? `DEVICE ID: ${state.currentMission.id}` : '';
-            elements.modalMission.textContent = missionLabel;
+            state.flagged = checkBotFlag(state.moveTimes);
 
             const stats = getStats();
             stats.gamesPlayed++;
 
+            const missionId = state.currentMission ? state.currentMission.id : '';
+            document.getElementById('go-p1').classList.remove('hidden');
+            document.getElementById('go-p2').classList.add('hidden');
+
             if (success) {
-                const timeBonus = (Math.floor(state.timeLeft / 10) * 0.5);
+                const timeBonus = Math.floor(state.timeLeft / 10) * 0.5;
                 const finalScore = state.playerScore + timeBonus;
+                state.lastFinalScore = finalScore;
 
                 stats.wins++;
                 stats.totalScore += finalScore;
                 const timeUsed = 120 - state.timeLeft;
                 if (stats.fastestClear === null || timeUsed < stats.fastestClear) stats.fastestClear = timeUsed;
+                saveStats(stats);
 
-                elements.modalTitle.textContent = "DEVICE DEFUSED";
-                elements.modalTitle.style.color = "var(--selected)";
-                elements.modalBreakdown.textContent = `CELLS: ${state.playerScore} | SPEED BONUS: +${timeBonus.toFixed(1)}`;
-                elements.modalResult.textContent = finalScore.toFixed(1);
-                saveScore(finalScore);
+                if (state.isChallenge && state.p1Data) {
+                    const p1Score = state.p1Data.p1Score;
+                    const won = finalScore > p1Score;
+                    const tied = finalScore === p1Score;
+                    const verdict = document.getElementById('modal-verdict');
+                    verdict.textContent = tied ? 'DRAW' : won ? 'YOU WIN' : 'YOU LOSE';
+                    verdict.style.color = tied ? 'var(--selected)' : won ? '#fbbf24' : '#ef4444';
+                    document.getElementById('modal-mission-p2').textContent = `DEVICE ID: ${missionId}`;
+                    document.getElementById('result-p1-score').textContent = parseFloat(p1Score).toFixed(1);
+                    document.getElementById('result-p2-score').textContent = finalScore.toFixed(1);
+                    document.getElementById('result-p1-flag').classList.toggle('hidden', !state.p1Data.p1Flagged);
+                    document.getElementById('result-p2-flag').classList.toggle('hidden', !state.flagged);
+                    document.getElementById('go-p1').classList.add('hidden');
+                    document.getElementById('go-p2').classList.remove('hidden');
+                    saveScore(finalScore, 'CHALLENGE', p1Score, won ? 'WIN' : tied ? 'DRAW' : 'LOSS', state.flagged, state.p1Data.p1Flagged);
+                } else {
+                    document.getElementById('modal-mission').textContent = `DEVICE ID: ${missionId}`;
+                    document.getElementById('modal-title').textContent = 'DEVICE DEFUSED';
+                    document.getElementById('modal-title').style.color = 'var(--selected)';
+                    document.getElementById('modal-breakdown').textContent = `CELLS: ${state.playerScore} | SPEED BONUS: +${timeBonus.toFixed(1)}`;
+                    document.getElementById('modal-result').textContent = finalScore.toFixed(1);
+                    document.getElementById('modal-flag').classList.toggle('hidden', !state.flagged);
+                    document.getElementById('challenge-btn').style.display = '';
+                    saveScore(finalScore, 'SOLO', null, null, state.flagged, false);
+                }
             } else {
-                elements.modalTitle.textContent = "SYSTEM DETONATED";
-                elements.modalTitle.style.color = "#ef4444";
-                elements.modalBreakdown.textContent = "CRITICAL FAIL: TIME EXPIRED";
-                elements.modalResult.textContent = state.playerScore.toFixed(1);
+                saveStats(stats);
+                document.getElementById('modal-mission').textContent = `DEVICE ID: ${missionId}`;
+                document.getElementById('modal-title').textContent = 'SYSTEM DETONATED';
+                document.getElementById('modal-title').style.color = '#ef4444';
+                document.getElementById('modal-breakdown').textContent = 'CRITICAL FAIL: TIME EXPIRED';
+                document.getElementById('modal-result').textContent = state.playerScore.toFixed(1);
+                document.getElementById('modal-flag').classList.add('hidden');
+                document.getElementById('challenge-btn').style.display = 'none';
+                saveScore(state.playerScore, 'SOLO', null, 'FAIL', state.flagged, false);
             }
 
-            saveStats(stats);
             elements.modal.classList.remove('hidden');
         }
 
@@ -605,34 +713,119 @@
             }
         }
 
-        function saveScore(score) {
+        function copyChallenge() {
+            const payload = btoa(JSON.stringify({
+                seed: state.matchSeed,
+                missionId: state.currentMission ? state.currentMission.id : '',
+                p1Score: state.lastFinalScore,
+                p1Flagged: state.flagged,
+                ts: Date.now()
+            }));
+            const url = `${location.href.split('#')[0]}#m=${payload}`;
+            navigator.clipboard.writeText(url).then(() => {
+                const btn = document.getElementById('challenge-btn');
+                btn.textContent = 'COPIED!';
+                setTimeout(() => btn.textContent = 'COPY CHALLENGE LINK', 2000);
+            });
+        }
+
+        function initMatch() {
+            const hash = location.hash;
+            if (hash.startsWith('#m=')) {
+                try {
+                    const data = JSON.parse(atob(hash.slice(3)));
+                    if (Date.now() - data.ts > MATCH_TTL) {
+                        document.getElementById('expired-modal').classList.remove('hidden');
+                        return;
+                    }
+                    state.p1Data = data;
+                    state.matchSeed = data.seed;
+                    state.isChallenge = true;
+                    document.getElementById('challenge-device-id').textContent = `DEVICE ID: ${data.missionId}`;
+                    document.getElementById('challenge-modal').classList.remove('hidden');
+                } catch(e) { startFresh(); }
+            } else {
+                startFresh();
+            }
+        }
+
+        function startFresh() {
+            state.isChallenge = false;
+            state.p1Data = null;
+            showView('menu');
+        }
+
+        function acceptChallenge() {
+            document.getElementById('challenge-modal').classList.add('hidden');
+            showView('game');
+        }
+
+        function newMission() {
+            state.isChallenge = false;
+            state.p1Data = null;
+            resetGame();
+        }
+
+        function saveScore(score, matchType, opponentScore, result, flagged, opponentFlagged) {
             const history = JSON.parse(localStorage.getItem('circuit_breaker_history') || '[]');
-            history.unshift({ score: score.toFixed(1), date: new Date().toLocaleString() });
+            history.unshift({
+                score: parseFloat(score).toFixed(1),
+                date: new Date().toLocaleString(),
+                matchType: matchType || 'SOLO',
+                opponentScore: opponentScore !== null && opponentScore !== undefined ? parseFloat(opponentScore).toFixed(1) : null,
+                result: result || null,
+                flagged: flagged || false,
+                opponentFlagged: opponentFlagged || false
+            });
             localStorage.setItem('circuit_breaker_history', JSON.stringify(history.slice(0, 20)));
-            if(score > state.highScore) {
-                state.highScore = score;
-                localStorage.setItem('circuit_breaker_high', score);
+            if (parseFloat(score) > state.highScore) {
+                state.highScore = parseFloat(score);
+                localStorage.setItem('circuit_breaker_high', state.highScore);
             }
         }
 
         function loadHistory() {
             const history = JSON.parse(localStorage.getItem('circuit_breaker_history') || '[]');
             if (!history.length) {
-                elements.historyBody.innerHTML = `<tr><td colspan="2" class="p-10 text-center text-gray-700 italic uppercase">LOG EMPTY</td></tr>`;
+                elements.historyBody.innerHTML = `<tr><td colspan="3" class="p-10 text-center text-gray-700 italic uppercase">LOG EMPTY</td></tr>`;
                 return;
             }
+            const typeColors = { WIN: '#fbbf24', LOSS: '#ef4444', DRAW: 'var(--selected)', SOLO: '#6b7280', FAIL: '#ef4444' };
             elements.historyBody.innerHTML = '';
             history.forEach(h => {
                 const tr = document.createElement('tr');
                 tr.className = 'border-b-2 border-gray-900 hover:bg-gray-800 transition font-sans';
+
                 const tdDate = document.createElement('td');
-                tdDate.className = 'p-5 text-[10px] text-gray-500 font-bold uppercase';
+                tdDate.className = 'p-3 text-[10px] text-gray-500 font-bold uppercase';
                 tdDate.textContent = h.date;
+
+                const tdType = document.createElement('td');
+                tdType.className = 'p-3 text-center';
+                const typeLabel = h.result || h.matchType || 'SOLO';
+                const badge = document.createElement('span');
+                badge.className = 'text-[9px] font-black uppercase px-2 py-1 border-2';
+                badge.style.color = typeColors[typeLabel] || '#6b7280';
+                badge.style.borderColor = typeColors[typeLabel] || '#6b7280';
+                badge.textContent = typeLabel;
+                tdType.appendChild(badge);
+
                 const tdScore = document.createElement('td');
-                tdScore.className = 'p-5 text-right text-2xl font-black';
-                tdScore.style.color = 'var(--selected)';
-                tdScore.textContent = h.score;
+                tdScore.className = 'p-3 text-right';
+                const scoreDiv = document.createElement('div');
+                scoreDiv.className = 'text-2xl font-black';
+                scoreDiv.style.color = 'var(--selected)';
+                scoreDiv.textContent = h.score + (h.flagged ? ' ⚠' : '');
+                tdScore.appendChild(scoreDiv);
+                if (h.opponentScore !== null && h.opponentScore !== undefined) {
+                    const oppDiv = document.createElement('div');
+                    oppDiv.className = 'text-[9px] text-gray-600 uppercase';
+                    oppDiv.textContent = `vs ${h.opponentScore}${h.opponentFlagged ? ' ⚠' : ''}`;
+                    tdScore.appendChild(oppDiv);
+                }
+
                 tr.appendChild(tdDate);
+                tr.appendChild(tdType);
                 tr.appendChild(tdScore);
                 elements.historyBody.appendChild(tr);
             });
@@ -665,9 +858,14 @@
             }
         }
 
-        function abortMission() { clearInterval(state.timerInterval); showView('menu'); }
+        function abortMission() {
+            clearInterval(state.timerInterval);
+            state.isChallenge = false;
+            state.p1Data = null;
+            showView('menu');
+        }
 
-        window.onload = () => { updateHighScoreDisplay(); showView('menu'); };
+        window.onload = () => { updateHighScoreDisplay(); initMatch(); };
     </script>
 </body>
 </html>
