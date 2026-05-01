@@ -491,6 +491,7 @@
                         const sides = [state.hLines[r][c], state.hLines[r+1][c], state.vLines[r][c], state.vLines[r][c+1]];
                         const hasRed = sides.some(s => s === 'void');
                         const boxEl = document.getElementById(`box-${r}-${c}`);
+                        if (!boxEl) continue;
                         boxEl.classList.add('box-claimed');
                         if (!hasRed) {
                             state.boxes[r][c] = 'scored'; boxEl.classList.add('box-scored'); boxEl.innerHTML = '<span style="font-size:10px">SAFE</span>'; state.playerScore++;
@@ -576,7 +577,7 @@
             elements.playerScore.textContent = state.playerScore.toString().padStart(2, '0');
             const sel = "#54D8A8";
             elements.m1.style.backgroundColor = state.moveCycle === 0 ? sel : '#000';
-            elements.m2.style.backgroundColor = state.moveCycle >= 1 ? sel : '#000';
+            elements.m2.style.backgroundColor = state.moveCycle === 1 ? sel : '#000';
             elements.m3.style.backgroundColor = state.moveCycle === 2 ? '#ef4444' : '#000';
             if (state.moveCycle < 2) {
                 elements.status.textContent = `OVERRIDE WIRE ${state.moveCycle + 1}`;
