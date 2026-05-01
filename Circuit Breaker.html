@@ -660,8 +660,7 @@
                     document.getElementById('modal-mission-p2').textContent = `DEVICE ID: ${missionId}`;
                     document.getElementById('result-p1-score').textContent = parseFloat(p1Score).toFixed(1);
                     document.getElementById('result-p2-score').textContent = finalScore.toFixed(1);
-                    document.getElementById('result-p1-flag').classList.toggle('hidden', !state.p1Data.p1Flagged);
-                    document.getElementById('result-p2-flag').classList.toggle('hidden', !state.flagged);
+                    // flags retained in payload and history, not shown to players
                     document.getElementById('go-p1').classList.add('hidden');
                     document.getElementById('go-p2').classList.remove('hidden');
                     saveScore(finalScore, 'CHALLENGE', p1Score, won ? 'WIN' : tied ? 'DRAW' : 'LOSS', state.flagged, state.p1Data.p1Flagged);
@@ -671,7 +670,7 @@
                     document.getElementById('modal-title').style.color = 'var(--selected)';
                     document.getElementById('modal-breakdown').textContent = `CELLS: ${state.playerScore} | SPEED BONUS: +${timeBonus.toFixed(1)}`;
                     document.getElementById('modal-result').textContent = finalScore.toFixed(1);
-                    document.getElementById('modal-flag').classList.toggle('hidden', !state.flagged);
+                    // flag retained in state and history but not surfaced to player
                     document.getElementById('challenge-btn').style.display = '';
                     saveScore(finalScore, 'SOLO', null, null, state.flagged, false);
                 }
@@ -682,7 +681,7 @@
                 document.getElementById('modal-title').style.color = '#ef4444';
                 document.getElementById('modal-breakdown').textContent = 'CRITICAL FAIL: TIME EXPIRED';
                 document.getElementById('modal-result').textContent = state.playerScore.toFixed(1);
-                document.getElementById('modal-flag').classList.add('hidden');
+                // flag retained silently
                 document.getElementById('challenge-btn').style.display = 'none';
                 saveScore(state.playerScore, 'SOLO', null, 'FAIL', state.flagged, false);
             }
@@ -815,12 +814,12 @@
                 const scoreDiv = document.createElement('div');
                 scoreDiv.className = 'text-2xl font-black';
                 scoreDiv.style.color = 'var(--selected)';
-                scoreDiv.textContent = h.score + (h.flagged ? ' ⚠' : '');
+                scoreDiv.textContent = h.score;
                 tdScore.appendChild(scoreDiv);
                 if (h.opponentScore !== null && h.opponentScore !== undefined) {
                     const oppDiv = document.createElement('div');
                     oppDiv.className = 'text-[9px] text-gray-600 uppercase';
-                    oppDiv.textContent = `vs ${h.opponentScore}${h.opponentFlagged ? ' ⚠' : ''}`;
+                    oppDiv.textContent = `vs ${h.opponentScore}`;
                     tdScore.appendChild(oppDiv);
                 }
 
