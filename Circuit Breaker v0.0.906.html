@@ -344,8 +344,15 @@
         <div class="bg-black border-4 border-gray-800 p-2 max-h-[520px] overflow-y-auto shadow-[10px_10px_0px_#000] w-full max-w-lg">
             <div class="p-6 space-y-8 text-gray-300">
                 <div>
-                    <div class="text-[10px] text-gray-600 uppercase font-bold mb-1">v0.0.905</div>
+                    <div class="text-[10px] text-gray-600 uppercase font-bold mb-1">v0.0.906</div>
                     <h3 class="text-white font-bold uppercase tracking-wider mb-2">CURRENT BUILD</h3>
+                    <ul class="text-xs space-y-1 text-gray-400">
+                        <li>— Mobile back button returns to home screen instead of leaving game</li>
+                    </ul>
+                </div>
+                <div class="border-t-2 border-gray-900 pt-6">
+                    <div class="text-[10px] text-gray-600 uppercase font-bold mb-1">v0.0.905</div>
+                    <h3 class="text-white font-bold uppercase tracking-wider mb-2">BUG FIXES</h3>
                     <ul class="text-xs space-y-1 text-gray-400">
                         <li>— Bug fixes: run;debug-all pass</li>
                         <li>— Move indicators now show active slot only (was always-lit)</li>
@@ -426,7 +433,7 @@
             </div>
             <div class="flex justify-between items-center pt-2">
                 <div class="text-[10px] text-gray-600 uppercase font-bold">VERSION</div>
-                <div class="text-[10px] text-gray-500 uppercase font-bold">v0.0.905</div>
+                <div class="text-[10px] text-gray-500 uppercase font-bold">v0.0.906</div>
             </div>
         </div>
         <button onclick="showView('menu')" class="btn-arcade mt-12 w-full max-w-xs text-2xl">BACK TO CORE</button>
@@ -552,12 +559,19 @@
             statFastest: document.getElementById('stat-fastest')
         };
 
-        function showView(viewId) {
+        function showView(viewId, fromPopstate) {
             document.querySelectorAll('.view-section').forEach(v => v.classList.remove('view-active'));
             document.getElementById('view-' + viewId).classList.add('view-active');
             if(viewId === 'history') { loadHistory(); loadStats(); }
             if(viewId === 'menu') updateHighScoreDisplay();
             if(viewId === 'game') resetGame();
+            if (!fromPopstate) {
+                if (viewId === 'menu') {
+                    history.replaceState({ view: 'menu' }, '');
+                } else {
+                    history.pushState({ view: viewId }, '');
+                }
+            }
         }
 
         function getMissionFromSeed(seed) {
@@ -1023,8 +1037,28 @@
             showView('menu');
         }
 
+        window.addEventListener('popstate', (e) => {
+            const view = e.state && e.state.view ? e.state.view : 'menu';
+            if (view === 'game') {
+                // Navigating back into game view — treat as going to menu instead
+                clearInterval(state.timerInterval);
+                state.isChallenge = false;
+                state.p1Data = null;
+                history.replaceState({ view: 'menu' }, '');
+                showView('menu', true);
+            } else {
+                // For sub-panels or menu, abort any active game and show the target view
+                if (!state.isGameOver) {
+                    clearInterval(state.timerInterval);
+                    state.isChallenge = false;
+                    state.p1Data = null;
+                }
+                showView(view, true);
+            }
+        });
+
         window.onload = () => { updateHighScoreDisplay(); initMatch(); };
     </script>
-    <p style="font-size:10px;text-align:center;opacity:0.4;padding:8px;letter-spacing:0.3em;text-transform:uppercase;">&copy; Tacticon Studios 2026 &mdash; v0.0.905</p>
+    <p style="font-size:10px;text-align:center;opacity:0.4;padding:8px;letter-spacing:0.3em;text-transform:uppercase;">&copy; Tacticon Studios 2026 &mdash; v0.0.906</p>
 </body>
 </html>
