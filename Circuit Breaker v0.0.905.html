@@ -344,8 +344,20 @@
         <div class="bg-black border-4 border-gray-800 p-2 max-h-[520px] overflow-y-auto shadow-[10px_10px_0px_#000] w-full max-w-lg">
             <div class="p-6 space-y-8 text-gray-300">
                 <div>
-                    <div class="text-[10px] text-gray-600 uppercase font-bold mb-1">v0.0.904</div>
+                    <div class="text-[10px] text-gray-600 uppercase font-bold mb-1">v0.0.905</div>
                     <h3 class="text-white font-bold uppercase tracking-wider mb-2">CURRENT BUILD</h3>
+                    <ul class="text-xs space-y-1 text-gray-400">
+                        <li>— Bug fixes: run;debug-all pass</li>
+                        <li>— Move indicators now show active slot only (was always-lit)</li>
+                        <li>— Double resetGame on newMission eliminated</li>
+                        <li>— JSON.parse wrapped in try/catch throughout</li>
+                        <li>— Clipboard fallback prompt when API unavailable</li>
+                        <li>— Footer and settings version strings corrected</li>
+                    </ul>
+                </div>
+                <div class="border-t-2 border-gray-900 pt-6">
+                    <div class="text-[10px] text-gray-600 uppercase font-bold mb-1">v0.0.904</div>
+                    <h3 class="text-white font-bold uppercase tracking-wider mb-2">MENU REFIT</h3>
                     <ul class="text-xs space-y-1 text-gray-400">
                         <li>— Patch notes + Settings added to main menu</li>
                         <li>— Menu UI refitted, tagline repositioned</li>
@@ -414,7 +426,7 @@
             </div>
             <div class="flex justify-between items-center pt-2">
                 <div class="text-[10px] text-gray-600 uppercase font-bold">VERSION</div>
-                <div class="text-[10px] text-gray-500 uppercase font-bold">v0.0.904</div>
+                <div class="text-[10px] text-gray-500 uppercase font-bold">v0.0.905</div>
             </div>
         </div>
         <button onclick="showView('menu')" class="btn-arcade mt-12 w-full max-w-xs text-2xl">BACK TO CORE</button>
@@ -516,7 +528,7 @@
             moveTimes: [],
             flagged: false,
             lastFinalScore: 0,
-            highScore: parseFloat(localStorage.getItem('circuit_breaker_high')) || 0
+            highScore: parseFloat(localStorage.getItem('circuit_breaker_high') || '0') || 0
         };
 
         const elements = {
@@ -801,7 +813,11 @@
         }
 
         function getStats() {
-            return JSON.parse(localStorage.getItem('circuit_breaker_stats') || '{"gamesPlayed":0,"wins":0,"totalScore":0,"fastestClear":null}');
+            try {
+                return JSON.parse(localStorage.getItem('circuit_breaker_stats') || '{"gamesPlayed":0,"wins":0,"totalScore":0,"fastestClear":null}');
+            } catch(e) {
+                return { gamesPlayed: 0, wins: 0, totalScore: 0, fastestClear: null };
+            }
         }
 
         function saveStats(stats) {
@@ -836,7 +852,9 @@
                 const btn = document.getElementById('challenge-btn');
                 btn.textContent = 'COPIED!';
                 setTimeout(() => btn.textContent = 'COPY CHALLENGE LINK', 2000);
-            }).catch(err => { /* clipboard unavailable — silent fallback */ });
+            }).catch(() => {
+                prompt('Copy this challenge link:', url);
+            });
         }
 
         function initMatch() {
@@ -873,12 +891,16 @@
         function newMission() {
             state.isChallenge = false;
             state.p1Data = null;
-            resetGame();
             showView('game');
         }
 
         function saveScore(score, matchType, opponentScore, result, flagged, opponentFlagged) {
-            const history = JSON.parse(localStorage.getItem('circuit_breaker_history') || '[]');
+            let history;
+            try {
+                history = JSON.parse(localStorage.getItem('circuit_breaker_history') || '[]');
+            } catch(e) {
+                history = [];
+            }
             history.unshift({
                 score: parseFloat(score).toFixed(1),
                 date: new Date().toLocaleString(),
@@ -896,7 +918,12 @@
         }
 
         function loadHistory() {
-            const history = JSON.parse(localStorage.getItem('circuit_breaker_history') || '[]');
+            let history;
+            try {
+                history = JSON.parse(localStorage.getItem('circuit_breaker_history') || '[]');
+            } catch(e) {
+                history = [];
+            }
             if (!history.length) {
                 elements.historyBody.innerHTML = `<tr><td colspan="3" class="p-10 text-center text-gray-700 italic uppercase">LOG EMPTY</td></tr>`;
                 return;
@@ -956,9 +983,9 @@
         function updateDisplay() {
             elements.playerScore.textContent = state.playerScore.toString().padStart(2, '0');
             const sel = "#54D8A8";
-            elements.m1.style.backgroundColor = state.moveCycle >= 0 ? sel : '#000';
-            elements.m2.style.backgroundColor = state.moveCycle >= 1 ? sel : '#000';
-            elements.m3.style.backgroundColor = state.moveCycle >= 2 ? '#ef4444' : '#000';
+            elements.m1.style.backgroundColor = state.moveCycle === 0 ? sel : '#000';
+            elements.m2.style.backgroundColor = state.moveCycle === 1 ? sel : '#000';
+            elements.m3.style.backgroundColor = state.moveCycle === 2 ? '#ef4444' : '#000';
             if (state.moveCycle < 2) {
                 elements.status.textContent = `OVERRIDE WIRE ${state.moveCycle + 1}`;
                 elements.status.style.backgroundColor = sel;
@@ -998,6 +1025,6 @@
 
         window.onload = () => { updateHighScoreDisplay(); initMatch(); };
     </script>
-    <p style="font-size:10px;text-align:center;opacity:0.4;padding:8px;letter-spacing:0.3em;text-transform:uppercase;">&copy; Tacticon Studios 2026 &mdash; v0.0.902</p>
+    <p style="font-size:10px;text-align:center;opacity:0.4;padding:8px;letter-spacing:0.3em;text-transform:uppercase;">&copy; Tacticon Studios 2026 &mdash; v0.0.905</p>
 </body>
 </html>
