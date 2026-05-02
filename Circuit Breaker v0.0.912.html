@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Circuit Breaker: Defusal Unit v0.0.911</title>
+    <title>Circuit Breaker: Defusal Unit v0.0.912</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root {
@@ -229,7 +229,7 @@
         </div>
 
         <p class="mt-8 text-xs font-bold text-slate-600 tracking-[0.4em] uppercase">EOD DEFUSAL UNIT - 8-BIT</p>
-        <p style="font-size:10px;text-align:center;opacity:0.4;padding:8px;letter-spacing:0.3em;text-transform:uppercase;">&copy; Tacticon Studios 2026 &mdash; v0.0.911</p>
+        <p style="font-size:10px;text-align:center;opacity:0.4;padding:8px;letter-spacing:0.3em;text-transform:uppercase;">&copy; Tacticon Studios 2026 &mdash; v0.0.912</p>
     </div>
 
     <!-- GAME VIEW -->
@@ -292,7 +292,7 @@
         <div class="bg-black border-4 border-gray-800 p-8 space-y-8 text-gray-300 shadow-[10px_10px_0px_#000] w-full max-w-lg">
             <div class="border-l-8 p-4 bg-gray-950" style="border-color: var(--selected);">
                 <h3 class="text-white font-bold mb-1 uppercase tracking-wider">01. WIRE CYCLE</h3>
-                <p class="text-xs">Place <span style="color:var(--selected)">2 BLUE WIRES</span> to override system nodes, then <span class="text-red-500 font-bold">1 RED SURGE WIRE</span>. Repeat until circuit is closed.</p>
+                <p class="text-xs">Place <span style="color:var(--selected)">2 OVERRIDE WIRES</span> to override system nodes, then <span class="text-red-500 font-bold">1 RED SURGE WIRE</span>. Repeat until circuit is closed.</p>
             </div>
             <div class="border-l-8 p-4 bg-gray-950" style="border-color: #cbd5e1;">
                 <h3 class="text-white font-bold mb-1 uppercase tracking-wider">02. TIME BONUS</h3>
@@ -348,6 +348,14 @@
         <div class="bg-black border-4 border-gray-800 p-2 max-h-[520px] overflow-y-auto shadow-[10px_10px_0px_#000] w-full max-w-lg">
             <div class="p-6 space-y-8 text-gray-300">
                 <div>
+                    <div class="text-[10px] text-gray-600 uppercase font-bold mb-1">v0.0.912</div>
+                    <h3 class="text-white font-bold uppercase tracking-wider mb-2">BUG FIXES</h3>
+                    <ul class="text-xs space-y-1 text-gray-400">
+                        <li>— DRAW badge in mission log now shows amber instead of teal (was identical to WIN)</li>
+                        <li>— Rules: override wires labelled as OVERRIDE WIRES (were incorrectly called BLUE WIRES; colour is teal)</li>
+                    </ul>
+                </div>
+                <div class="border-t-2 border-gray-900 pt-6">
                     <div class="text-[10px] text-gray-600 uppercase font-bold mb-1">v0.0.911</div>
                     <h3 class="text-white font-bold uppercase tracking-wider mb-2">SOUNDSCAPE</h3>
                     <ul class="text-xs space-y-1 text-gray-400">
@@ -426,7 +434,7 @@
                     <h3 class="text-white font-bold uppercase tracking-wider mb-2">INITIAL RELEASE</h3>
                     <ul class="text-xs space-y-1 text-gray-400">
                         <li>— Dots and boxes core gameplay with wire cycle mechanic</li>
-                        <li>— 2 blue override wires + 1 red surge wire per cycle</li>
+                        <li>— 2 override wires + 1 red surge wire per cycle</li>
                         <li>— Red surge wire touching a cell = 0 points for that cell</li>
                         <li>— 180s timer with speed bonus (+0.5 pts per 10s remaining)</li>
                         <li>— 20 seeded mission profiles</li>
@@ -466,7 +474,7 @@
             </div>
             <div class="flex justify-between items-center pt-2">
                 <div class="text-[10px] text-gray-600 uppercase font-bold">VERSION</div>
-                <div class="text-[10px] text-gray-500 uppercase font-bold">v0.0.911</div>
+                <div class="text-[10px] text-gray-500 uppercase font-bold">v0.0.912</div>
             </div>
         </div>
         <button onclick="showView('menu')" class="btn-arcade mt-12 w-full max-w-xs text-2xl">BACK TO CORE</button>
@@ -538,7 +546,7 @@
     </div>
 
     <script>
-        (function(){ var _k='cb_wipe_v911'; if(localStorage.getItem(_k)!=='1'){ localStorage.removeItem('circuit_breaker_high'); localStorage.removeItem('circuit_breaker_history'); localStorage.removeItem('circuit_breaker_stats'); localStorage.setItem(_k,'1'); } })();
+        (function(){ var _k='cb_wipe_v912'; if(localStorage.getItem(_k)!=='1'){ localStorage.removeItem('circuit_breaker_high'); localStorage.removeItem('circuit_breaker_history'); localStorage.removeItem('circuit_breaker_stats'); localStorage.setItem(_k,'1'); } })();
 
         // ── Web Audio Soundscape ──────────────────────────────────────────
         const _ac = { ctx: null };
@@ -1110,7 +1118,7 @@
                 elements.historyBody.innerHTML = `<tr><td colspan="3" class="p-10 text-center text-gray-700 italic uppercase">LOG EMPTY</td></tr>`;
                 return;
             }
-            const typeColors = { WIN: '#54D8A8', LOSS: '#ef4444', DRAW: 'var(--selected)', SOLO: '#6b7280', FAIL: '#ef4444' };
+            const typeColors = { WIN: '#54D8A8', LOSS: '#ef4444', DRAW: '#fbbf24', SOLO: '#6b7280', FAIL: '#ef4444' };
             elements.historyBody.innerHTML = '';
             history.forEach(h => {
                 const tr = document.createElement('tr');
