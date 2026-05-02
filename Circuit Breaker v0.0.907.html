@@ -254,7 +254,7 @@
                 </div>
                 <div class="p-4 border-r-4 border-gray-800 flex flex-col items-center">
                     <span class="text-[10px] text-gray-600 mb-1 uppercase font-bold">Timer</span>
-                    <span id="mission-timer" class="text-3xl font-bold timer-text">02:00</span>
+                    <span id="mission-timer" class="text-3xl font-bold timer-text">03:00</span>
                 </div>
                 <div class="p-4 flex flex-col items-center justify-center">
                     <div class="flex gap-2" id="move-indicators">
@@ -292,7 +292,7 @@
             </div>
             <div class="border-l-8 p-4 bg-gray-950" style="border-color: #cbd5e1;">
                 <h3 class="text-white font-bold mb-1 uppercase tracking-wider">02. TIME BONUS</h3>
-                <p class="text-xs">DEFUSE UNDER <span class="text-red-500">120S</span>. GAIN <span style="color:var(--presence)">+0.5 PTS</span> PER 10S REMAINING UPON DEFUSAL.</p>
+                <p class="text-xs">DEFUSE UNDER <span class="text-red-500">180S</span>. GAIN <span style="color:var(--presence)">+0.5 PTS</span> PER 10S REMAINING UPON DEFUSAL.</p>
             </div>
             <div class="border-l-8 p-4 bg-gray-950" style="border-color: #ef4444;">
                 <h3 class="text-white font-bold mb-1 uppercase tracking-wider">03. DEFUSAL</h3>
@@ -344,7 +344,7 @@
         <div class="bg-black border-4 border-gray-800 p-2 max-h-[520px] overflow-y-auto shadow-[10px_10px_0px_#000] w-full max-w-lg">
             <div class="p-6 space-y-8 text-gray-300">
                 <div>
-                    <div class="text-[10px] text-gray-600 uppercase font-bold mb-1">v0.0.906</div>
+                    <div class="text-[10px] text-gray-600 uppercase font-bold mb-1">v0.0.907</div>
                     <h3 class="text-white font-bold uppercase tracking-wider mb-2">CURRENT BUILD</h3>
                     <ul class="text-xs space-y-1 text-gray-400">
                         <li>— Mobile back button returns to home screen instead of leaving game</li>
@@ -395,7 +395,7 @@
                         <li>— Dots and boxes core gameplay with wire cycle mechanic</li>
                         <li>— 2 blue override wires + 1 red surge wire per cycle</li>
                         <li>— Red surge wire touching a cell = 0 points for that cell</li>
-                        <li>— 120s timer with speed bonus (+0.5 pts per 10s remaining)</li>
+                        <li>— 180s timer with speed bonus (+0.5 pts per 10s remaining)</li>
                         <li>— 20 seeded mission profiles</li>
                         <li>— Perimeter obstacle borders + interior obstacle scatter</li>
                         <li>— Mission log with score history</li>
@@ -433,7 +433,7 @@
             </div>
             <div class="flex justify-between items-center pt-2">
                 <div class="text-[10px] text-gray-600 uppercase font-bold">VERSION</div>
-                <div class="text-[10px] text-gray-500 uppercase font-bold">v0.0.906</div>
+                <div class="text-[10px] text-gray-500 uppercase font-bold">v0.0.907</div>
             </div>
         </div>
         <button onclick="showView('menu')" class="btn-arcade mt-12 w-full max-w-xs text-2xl">BACK TO CORE</button>
@@ -526,7 +526,7 @@
         const state = {
             hLines: [], vLines: [], boxes: [],
             playerScore: 0, moveCycle: 0,
-            isGameOver: false, timeLeft: 120,
+            isGameOver: false, timeLeft: 180,
             timerInterval: null, timerActive: false,
             currentMission: null,
             matchSeed: 0,
@@ -591,7 +591,7 @@
         function resetGame() {
             clearInterval(state.timerInterval);
             state.timerActive = false;
-            state.timeLeft = 120;
+            state.timeLeft = 180;
             state.isGameOver = false;
             state.playerScore = 0;
             state.moveCycle = 0;
@@ -604,7 +604,7 @@
             state.hLines = Array(GRID_SIZE).fill().map(() => Array(BOXES_SIZE).fill(null));
             state.vLines = Array(BOXES_SIZE).fill().map(() => Array(GRID_SIZE).fill(null));
             state.boxes = Array(BOXES_SIZE).fill().map(() => Array(BOXES_SIZE).fill(null));
-            elements.timer.textContent = "02:00";
+            elements.timer.textContent = "03:00";
             elements.modal.classList.add('hidden');
             const mission = getMissionFromSeed(state.matchSeed);
             state.currentMission = mission;
@@ -767,7 +767,7 @@
 
                 stats.wins++;
                 stats.totalScore += finalScore;
-                const timeUsed = 120 - state.timeLeft;
+                const timeUsed = 180 - state.timeLeft;
                 if (stats.fastestClear === null || timeUsed < stats.fastestClear) stats.fastestClear = timeUsed;
                 saveStats(stats);
 
@@ -1059,6 +1059,6 @@
 
         window.onload = () => { updateHighScoreDisplay(); initMatch(); };
     </script>
-    <p style="font-size:10px;text-align:center;opacity:0.4;padding:8px;letter-spacing:0.3em;text-transform:uppercase;">&copy; Tacticon Studios 2026 &mdash; v0.0.906</p>
+    <p style="font-size:10px;text-align:center;opacity:0.4;padding:8px;letter-spacing:0.3em;text-transform:uppercase;">&copy; Tacticon Studios 2026 &mdash; v0.0.907</p>
 </body>
 </html>
