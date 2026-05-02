@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Circuit Breaker: Defusal Unit v0.0.8</title>
+    <title>Circuit Breaker: Defusal Unit v0.0.9</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root {
@@ -223,7 +223,7 @@
         </div>
 
         <p class="mt-5 text-xs font-bold text-slate-600 tracking-[0.4em] uppercase">EOD DEFUSAL UNIT - 8-BIT</p>
-        <p style="font-size:10px;text-align:center;opacity:0.4;padding:6px;letter-spacing:0.3em;text-transform:uppercase;">&copy; Tacticon Studios 2026 &mdash; v0.0.8</p>
+        <p style="font-size:10px;text-align:center;opacity:0.4;padding:6px;letter-spacing:0.3em;text-transform:uppercase;">&copy; Tacticon Studios 2026 &mdash; v0.0.9</p>
     </div>
 
     <!-- GAME VIEW -->
@@ -347,6 +347,16 @@
         <div class="bg-black border-4 border-gray-800 p-2 max-h-[520px] overflow-y-auto shadow-[10px_10px_0px_#000] w-full max-w-lg">
             <div class="p-6 space-y-8 text-gray-300">
                 <div>
+                    <div class="text-[10px] text-gray-600 uppercase font-bold mb-1">v0.0.9 &mdash; 2026-05-02</div>
+                    <h3 class="text-white font-bold uppercase tracking-wider mb-2">BUG FIXES</h3>
+                    <ul class="text-xs space-y-1 text-gray-400">
+                        <li>— Random games now use their own random seed instead of the named mission seed path</li>
+                        <li>— Bot-flag threshold raised: requires 3+ consecutive moves under 200ms (was any 2 moves under 300ms)</li>
+                        <li>— History table now refreshes immediately after wipe (no page reload required)</li>
+                        <li>— Tick sound stopped before explosion plays to prevent audio overlap on fast defusal</li>
+                    </ul>
+                </div>
+                <div class="border-t-2 border-gray-900 pt-6">
                     <div class="text-[10px] text-gray-600 uppercase font-bold mb-1">v0.0.8 &mdash; 2026-05-02</div>
                     <h3 class="text-white font-bold uppercase tracking-wider mb-2">UI POLISH</h3>
                     <ul class="text-xs space-y-1 text-gray-400">
@@ -481,7 +491,7 @@
             </div>
             <div class="flex justify-between items-center pt-2">
                 <div class="text-[10px] text-gray-600 uppercase font-bold">VERSION</div>
-                <div class="text-[10px] text-gray-500 uppercase font-bold">v0.0.8</div>
+                <div class="text-[10px] text-gray-500 uppercase font-bold">v0.0.9</div>
             </div>
         </div>
         <button onclick="showView('menu')" class="btn-arcade mt-12 w-full max-w-xs text-2xl">BACK TO CORE</button>
@@ -556,10 +566,29 @@
         (function(){ var _k='cb_wipe_v8'; if(localStorage.getItem(_k)!=='1'){ localStorage.removeItem('circuit_breaker_high'); localStorage.removeItem('circuit_breaker_history'); localStorage.removeItem('circuit_breaker_stats'); localStorage.setItem(_k,'1'); } })();
 
         // ── Web Audio Soundscape ──────────────────────────────────────────
-        const _ac = { ctx: null };
+        const _ac = { ctx: null, tickGain: null };
         function _audioCtx() {
             if (!_ac.ctx) _ac.ctx = new (window.AudioContext || window.webkitAudioContext)();
             return _ac.ctx;
+        }
+        function _tickGainNode() {
+            if (!_ac.tickGain || _ac.tickGain.context !== _ac.ctx) {
+                const ctx = _audioCtx();
+                _ac.tickGain = ctx.createGain();
+                _ac.tickGain.connect(ctx.destination);
+            }
+            return _ac.tickGain;
+        }
+        // Immediately silence any in-flight tick oscillators
+        function stopTick() {
+            try {
+                if (_ac.tickGain) {
+                    _ac.tickGain.gain.cancelScheduledValues(0);
+                    _ac.tickGain.gain.setValueAtTime(0, _ac.ctx.currentTime);
+                    // Reset gain for next game
+                    _ac.tickGain.gain.setValueAtTime(1, _ac.ctx.currentTime + 0.05);
+                }
+            } catch(e) {}
         }
         let _muted = false;
         function toggleMute() {
@@ -611,19 +640,33 @@
             playTone(120, 0.4, 'sawtooth', 0.35);
             playTone(90, 0.3, 'sawtooth', 0.25, 0.1);
         }
-        // Timer tick — short periodic tick
+        // Timer tick — short periodic tick, routed through dedicated gain node so it can be cut
         function sfxTick() {
-            playTone(600, 0.025, 'square', 0.12);
+            if (_muted) return;
+            try {
+                const ctx = _audioCtx();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain); gain.connect(_tickGainNode());
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(600, ctx.currentTime);
+                gain.gain.setValueAtTime(0.12, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.025);
+                osc.start(ctx.currentTime);
+                osc.stop(ctx.currentTime + 0.025);
+            } catch(e) {}
         }
-        // Win / defusal success — triumphant fanfare
+        // Win / defusal success — triumphant fanfare (stops tick first)
         function sfxWin() {
+            stopTick();
             playTone(523, 0.12, 'square', 0.25);
             playTone(659, 0.12, 'square', 0.22, 0.13);
             playTone(784, 0.12, 'square', 0.22, 0.26);
             playTone(1047, 0.35, 'square', 0.28, 0.39);
         }
-        // Explosion / game over — noise burst + low thud
+        // Explosion / game over — stop tick first, then noise burst + low thud
         function sfxExplosion() {
+            stopTick();
             playNoise(0.6, 0.45);
             playTone(60, 0.5, 'sine', 0.5);
             playTone(40, 0.4, 'sine', 0.4, 0.1);
@@ -706,7 +749,11 @@
             if (moveTimes.length < 2) return false;
             const gaps = [];
             for (let i = 1; i < moveTimes.length; i++) gaps.push(moveTimes[i] - moveTimes[i - 1]);
-            if (gaps.some(g => g < 300)) return true;
+            // Only flag if 3+ consecutive gaps are all under 200ms (reduces false positives on fast play)
+            let fastStreak = 0;
+            for (const g of gaps) {
+                if (g < 200) { fastStreak++; if (fastStreak >= 3) return true; } else { fastStreak = 0; }
+            }
             // Require at least 4 moves (3+ gaps) before applying the cadence stdDev check;
             // with 2 moves there is only 1 gap, giving stdDev = 0, which always falsely flags.
             if (moveTimes.length < 4) return false;
@@ -781,10 +828,10 @@
         }
 
         function applyObstacles(seed) {
-            // Use the named mission profile's seed when available so named missions
-            // produce reproducible boards. Fall back to the match seed (random) otherwise.
+            // For challenge games the seed must be reproducible (use the mission profile's fixed seed).
+            // For random solo games use the raw matchSeed so each game produces a unique board.
             const mission = state.currentMission;
-            const effectiveSeed = (mission && mission.seed != null) ? mission.seed : seed;
+            const effectiveSeed = (state.isChallenge && mission && mission.seed != null) ? mission.seed : seed;
 
             const MIN_PLAYABLE = 10;
             const MAX_ATTEMPTS = 8;
@@ -1195,6 +1242,9 @@
         function clearHistory() {
             if (!confirm('Wipe all mission log history?')) return;
             localStorage.removeItem('circuit_breaker_history');
+            loadHistory();
+            loadStats();
+            updateHighScoreDisplay();
             alert('Mission log cleared.');
         }
 
