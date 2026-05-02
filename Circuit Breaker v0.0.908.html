@@ -344,8 +344,17 @@
         <div class="bg-black border-4 border-gray-800 p-2 max-h-[520px] overflow-y-auto shadow-[10px_10px_0px_#000] w-full max-w-lg">
             <div class="p-6 space-y-8 text-gray-300">
                 <div>
+                    <div class="text-[10px] text-gray-600 uppercase font-bold mb-1">v0.0.908</div>
+                    <h3 class="text-white font-bold uppercase tracking-wider mb-2">BUG FIXES</h3>
+                    <ul class="text-xs space-y-1 text-gray-400">
+                        <li>— endGame guard prevents double-call when timer and final move fire simultaneously</li>
+                        <li>— updateDisplay skipped after game over to prevent status-bar flicker</li>
+                        <li>— High score display shows 00 placeholder when no score is set</li>
+                    </ul>
+                </div>
+                <div class="border-t-2 border-gray-900 pt-6">
                     <div class="text-[10px] text-gray-600 uppercase font-bold mb-1">v0.0.907</div>
-                    <h3 class="text-white font-bold uppercase tracking-wider mb-2">CURRENT BUILD</h3>
+                    <h3 class="text-white font-bold uppercase tracking-wider mb-2">BUG FIXES</h3>
                     <ul class="text-xs space-y-1 text-gray-400">
                         <li>— Mobile back button returns to home screen instead of leaving game</li>
                     </ul>
@@ -433,7 +442,7 @@
             </div>
             <div class="flex justify-between items-center pt-2">
                 <div class="text-[10px] text-gray-600 uppercase font-bold">VERSION</div>
-                <div class="text-[10px] text-gray-500 uppercase font-bold">v0.0.907</div>
+                <div class="text-[10px] text-gray-500 uppercase font-bold">v0.0.908</div>
             </div>
         </div>
         <button onclick="showView('menu')" class="btn-arcade mt-12 w-full max-w-xs text-2xl">BACK TO CORE</button>
@@ -697,7 +706,7 @@
             checkBoxes();
             state.moveCycle = (state.moveCycle + 1) % 3;
             checkGameOver();
-            updateDisplay();
+            if (!state.isGameOver) updateDisplay();
         }
 
         function startTimer() {
@@ -749,6 +758,7 @@
         }
 
         function endGame(success) {
+            if (state.isGameOver) return;
             clearInterval(state.timerInterval);
             state.isGameOver = true;
             state.flagged = checkBotFlag(state.moveTimes);
@@ -984,7 +994,7 @@
         }
 
         function updateHighScoreDisplay() {
-            elements.highScoreDisp.textContent = state.highScore.toFixed(1);
+            elements.highScoreDisp.textContent = state.highScore > 0 ? state.highScore.toFixed(1) : '00';
             const tier = getTier(state.highScore);
             if (tier) {
                 elements.tierBadge.textContent = `▲ ${tier.label}`;
@@ -1059,6 +1069,6 @@
 
         window.onload = () => { updateHighScoreDisplay(); initMatch(); };
     </script>
-    <p style="font-size:10px;text-align:center;opacity:0.4;padding:8px;letter-spacing:0.3em;text-transform:uppercase;">&copy; Tacticon Studios 2026 &mdash; v0.0.907</p>
+    <p style="font-size:10px;text-align:center;opacity:0.4;padding:8px;letter-spacing:0.3em;text-transform:uppercase;">&copy; Tacticon Studios 2026 &mdash; v0.0.908</p>
 </body>
 </html>
