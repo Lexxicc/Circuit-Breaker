@@ -344,7 +344,7 @@
         <div class="bg-black border-4 border-gray-800 p-2 max-h-[520px] overflow-y-auto shadow-[10px_10px_0px_#000] w-full max-w-lg">
             <div class="p-6 space-y-8 text-gray-300">
                 <div>
-                    <div class="text-[10px] text-gray-600 uppercase font-bold mb-1">v0.0.908</div>
+                    <div class="text-[10px] text-gray-600 uppercase font-bold mb-1">v0.0.909</div>
                     <h3 class="text-white font-bold uppercase tracking-wider mb-2">BUG FIXES</h3>
                     <ul class="text-xs space-y-1 text-gray-400">
                         <li>— endGame guard prevents double-call when timer and final move fire simultaneously</li>
@@ -442,7 +442,7 @@
             </div>
             <div class="flex justify-between items-center pt-2">
                 <div class="text-[10px] text-gray-600 uppercase font-bold">VERSION</div>
-                <div class="text-[10px] text-gray-500 uppercase font-bold">v0.0.908</div>
+                <div class="text-[10px] text-gray-500 uppercase font-bold">v0.0.909</div>
             </div>
         </div>
         <button onclick="showView('menu')" class="btn-arcade mt-12 w-full max-w-xs text-2xl">BACK TO CORE</button>
@@ -514,6 +514,8 @@
     </div>
 
     <script>
+        (function(){ var _k='cb_wipe_v909'; if(localStorage.getItem(_k)!=='1'){ localStorage.removeItem('circuit_breaker_high'); localStorage.removeItem('circuit_breaker_history'); localStorage.removeItem('circuit_breaker_stats'); localStorage.setItem(_k,'1'); } })();
+
         const MISSION_PROFILES = [
             { id: "ALPHA-1", seed: 101  }, { id: "BETA-4",  seed: 203  },
             { id: "GAMMA-9", seed: 307  }, { id: "SIGMA-X", seed: 419  },
@@ -1069,6 +1071,6 @@
 
         window.onload = () => { updateHighScoreDisplay(); initMatch(); };
     </script>
-    <p style="font-size:10px;text-align:center;opacity:0.4;padding:8px;letter-spacing:0.3em;text-transform:uppercase;">&copy; Tacticon Studios 2026 &mdash; v0.0.908</p>
+    <p style="font-size:10px;text-align:center;opacity:0.4;padding:8px;letter-spacing:0.3em;text-transform:uppercase;">&copy; Tacticon Studios 2026 &mdash; v0.0.909</p>
 </body>
 </html>
