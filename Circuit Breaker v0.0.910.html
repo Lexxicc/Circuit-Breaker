@@ -344,6 +344,18 @@
         <div class="bg-black border-4 border-gray-800 p-2 max-h-[520px] overflow-y-auto shadow-[10px_10px_0px_#000] w-full max-w-lg">
             <div class="p-6 space-y-8 text-gray-300">
                 <div>
+                    <div class="text-[10px] text-gray-600 uppercase font-bold mb-1">v0.0.910</div>
+                    <h3 class="text-white font-bold uppercase tracking-wider mb-2">BUG FIXES</h3>
+                    <ul class="text-xs space-y-1 text-gray-400">
+                        <li>— Solo wins now saved with result: WIN and show a distinct green badge in history</li>
+                        <li>— abortMission sets isGameOver = true, blocking queued touch events on mobile</li>
+                        <li>— Bot-flag cadence check now requires 4+ moves to prevent false positives on 2-move games</li>
+                        <li>— Named mission profiles now use their declared seed so boards are reproducible</li>
+                        <li>— Failed/timed-out games can no longer overwrite the high score</li>
+                        <li>— applyObstacles retries up to 8 times when fewer than 10 playable lines are generated</li>
+                    </ul>
+                </div>
+                <div class="border-t-2 border-gray-900 pt-6">
                     <div class="text-[10px] text-gray-600 uppercase font-bold mb-1">v0.0.909</div>
                     <h3 class="text-white font-bold uppercase tracking-wider mb-2">BUG FIXES</h3>
                     <ul class="text-xs space-y-1 text-gray-400">
@@ -442,7 +454,7 @@
             </div>
             <div class="flex justify-between items-center pt-2">
                 <div class="text-[10px] text-gray-600 uppercase font-bold">VERSION</div>
-                <div class="text-[10px] text-gray-500 uppercase font-bold">v0.0.909</div>
+                <div class="text-[10px] text-gray-500 uppercase font-bold">v0.0.910</div>
             </div>
         </div>
         <button onclick="showView('menu')" class="btn-arcade mt-12 w-full max-w-xs text-2xl">BACK TO CORE</button>
@@ -514,7 +526,7 @@
     </div>
 
     <script>
-        (function(){ var _k='cb_wipe_v909'; if(localStorage.getItem(_k)!=='1'){ localStorage.removeItem('circuit_breaker_high'); localStorage.removeItem('circuit_breaker_history'); localStorage.removeItem('circuit_breaker_stats'); localStorage.setItem(_k,'1'); } })();
+        (function(){ var _k='cb_wipe_v910'; if(localStorage.getItem(_k)!=='1'){ localStorage.removeItem('circuit_breaker_high'); localStorage.removeItem('circuit_breaker_history'); localStorage.removeItem('circuit_breaker_stats'); localStorage.setItem(_k,'1'); } })();
 
         const MISSION_PROFILES = [
             { id: "ALPHA-1", seed: 101  }, { id: "BETA-4",  seed: 203  },
@@ -594,6 +606,9 @@
             const gaps = [];
             for (let i = 1; i < moveTimes.length; i++) gaps.push(moveTimes[i] - moveTimes[i - 1]);
             if (gaps.some(g => g < 300)) return true;
+            // Require at least 4 moves (3+ gaps) before applying the cadence stdDev check;
+            // with 2 moves there is only 1 gap, giving stdDev = 0, which always falsely flags.
+            if (moveTimes.length < 4) return false;
             const mean = gaps.reduce((a, b) => a + b, 0) / gaps.length;
             const stdDev = Math.sqrt(gaps.reduce((a, b) => a + (b - mean) ** 2, 0) / gaps.length);
             return stdDev < 80;
@@ -639,16 +654,63 @@
             return () => { s = s * 16807 % 2147483647; return (s - 1) / 2147483646; };
         }
 
-        function applyObstacles(seed) {
-            const rand = seededRand(seed);
-            for (let c = 0; c < BOXES_SIZE; c++) { setLine('h', 0, c, 'obstacle'); setLine('h', GRID_SIZE - 1, c, 'obstacle'); }
-            for (let r = 0; r < BOXES_SIZE; r++) { setLine('v', r, 0, 'obstacle'); setLine('v', r, GRID_SIZE - 1, 'obstacle'); }
+        function countPlayableLines(hSnapshot, vSnapshot) {
+            let count = 0;
             for (let r = 1; r < GRID_SIZE - 1; r++)
                 for (let c = 0; c < BOXES_SIZE; c++)
-                    if (rand() < 0.22) setLine('h', r, c, 'obstacle');
+                    if (hSnapshot[r][c] === null) count++;
             for (let r = 0; r < BOXES_SIZE; r++)
                 for (let c = 1; c < GRID_SIZE - 1; c++)
-                    if (rand() < 0.22) setLine('v', r, c, 'obstacle');
+                    if (vSnapshot[r][c] === null) count++;
+            return count;
+        }
+
+        function resetLineDOM() {
+            // Reset all line DOM elements back to their initial empty state before a retry.
+            for (let r = 0; r < GRID_SIZE; r++)
+                for (let c = 0; c < BOXES_SIZE; c++) {
+                    const el = document.getElementById(`h-${r}-${c}`);
+                    if (el) { el.className = 'line line-h line-empty'; el.style.pointerEvents = ''; }
+                }
+            for (let r = 0; r < BOXES_SIZE; r++)
+                for (let c = 0; c < GRID_SIZE; c++) {
+                    const el = document.getElementById(`v-${r}-${c}`);
+                    if (el) { el.className = 'line line-v line-empty'; el.style.pointerEvents = ''; }
+                }
+        }
+
+        function applyObstacles(seed) {
+            // Use the named mission profile's seed when available so named missions
+            // produce reproducible boards. Fall back to the match seed (random) otherwise.
+            const mission = state.currentMission;
+            const effectiveSeed = (mission && mission.seed != null) ? mission.seed : seed;
+
+            const MIN_PLAYABLE = 10;
+            const MAX_ATTEMPTS = 8;
+
+            for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+                const attemptSeed = effectiveSeed + attempt;
+                const rand = seededRand(attemptSeed);
+
+                // Reset state arrays and DOM for a clean slate on each attempt
+                if (attempt > 0) resetLineDOM();
+                state.hLines = Array(GRID_SIZE).fill().map(() => Array(BOXES_SIZE).fill(null));
+                state.vLines = Array(BOXES_SIZE).fill().map(() => Array(GRID_SIZE).fill(null));
+
+                // Place perimeter obstacles
+                for (let c = 0; c < BOXES_SIZE; c++) { setLine('h', 0, c, 'obstacle'); setLine('h', GRID_SIZE - 1, c, 'obstacle'); }
+                for (let r = 0; r < BOXES_SIZE; r++) { setLine('v', r, 0, 'obstacle'); setLine('v', r, GRID_SIZE - 1, 'obstacle'); }
+                // Place interior obstacles
+                for (let r = 1; r < GRID_SIZE - 1; r++)
+                    for (let c = 0; c < BOXES_SIZE; c++)
+                        if (rand() < 0.22) setLine('h', r, c, 'obstacle');
+                for (let r = 0; r < BOXES_SIZE; r++)
+                    for (let c = 1; c < GRID_SIZE - 1; c++)
+                        if (rand() < 0.22) setLine('v', r, c, 'obstacle');
+
+                if (countPlayableLines(state.hLines, state.vLines) >= MIN_PLAYABLE) break;
+                // Board is too sparse — retry with a different seed offset
+            }
         }
 
         function markObstacleBoxes() {
@@ -805,7 +867,7 @@
                     document.getElementById('modal-result').textContent = finalScore.toFixed(1);
                     // flag retained in state and history but not surfaced to player
                     document.getElementById('challenge-btn').style.display = '';
-                    saveScore(finalScore, 'SOLO', null, null, state.flagged, false);
+                    saveScore(finalScore, 'SOLO', null, 'WIN', state.flagged, false);
                 }
             } else {
                 saveStats(stats);
@@ -937,7 +999,9 @@
                 opponentFlagged: opponentFlagged || false
             });
             localStorage.setItem('circuit_breaker_history', JSON.stringify(history.slice(0, 20)));
-            if (parseFloat(score) > state.highScore) {
+            // Only update the high score for winning outcomes; failed/expired games do not qualify.
+            const isFailure = result === 'FAIL' || result === 'LOSS';
+            if (!isFailure && parseFloat(score) > state.highScore) {
                 state.highScore = parseFloat(score);
                 localStorage.setItem('circuit_breaker_high', state.highScore);
             }
@@ -954,7 +1018,7 @@
                 elements.historyBody.innerHTML = `<tr><td colspan="3" class="p-10 text-center text-gray-700 italic uppercase">LOG EMPTY</td></tr>`;
                 return;
             }
-            const typeColors = { WIN: '#fbbf24', LOSS: '#ef4444', DRAW: 'var(--selected)', SOLO: '#6b7280', FAIL: '#ef4444' };
+            const typeColors = { WIN: '#54D8A8', LOSS: '#ef4444', DRAW: 'var(--selected)', SOLO: '#6b7280', FAIL: '#ef4444' };
             elements.historyBody.innerHTML = '';
             history.forEach(h => {
                 const tr = document.createElement('tr');
@@ -1044,6 +1108,7 @@
 
         function abortMission() {
             clearInterval(state.timerInterval);
+            state.isGameOver = true;
             state.isChallenge = false;
             state.p1Data = null;
             showView('menu');
@@ -1071,6 +1136,6 @@
 
         window.onload = () => { updateHighScoreDisplay(); initMatch(); };
     </script>
-    <p style="font-size:10px;text-align:center;opacity:0.4;padding:8px;letter-spacing:0.3em;text-transform:uppercase;">&copy; Tacticon Studios 2026 &mdash; v0.0.909</p>
+    <p style="font-size:10px;text-align:center;opacity:0.4;padding:8px;letter-spacing:0.3em;text-transform:uppercase;">&copy; Tacticon Studios 2026 &mdash; v0.0.910</p>
 </body>
 </html>
