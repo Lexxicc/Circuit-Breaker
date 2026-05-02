@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Circuit Breaker: Defusal Unit v0.0.912</title>
+    <title>Circuit Breaker: Defusal Unit v0.0.913</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root {
@@ -193,43 +193,37 @@
 <body>
 
     <!-- MENU VIEW -->
-    <div id="view-menu" class="view-section view-active py-16 px-4">
-        <div class="mb-10 text-center">
-            <h1 class="text-6xl md:text-7xl font-black mb-2 italic" style="color:var(--notify); text-shadow: 8px 8px 0px #000;">CIRCUIT</h1>
-            <h1 class="text-6xl md:text-7xl font-black italic" style="color:var(--presence); text-shadow: 8px 8px 0px #000;">BREAKER</h1>
+    <div id="view-menu" class="view-section view-active py-6 px-4">
+        <div class="mb-4 text-center">
+            <h1 class="text-5xl font-black mb-1 italic" style="color:var(--notify); text-shadow: 6px 6px 0px #000;">CIRCUIT</h1>
+            <h1 class="text-5xl font-black italic" style="color:var(--presence); text-shadow: 6px 6px 0px #000;">BREAKER</h1>
         </div>
 
-        <div class="space-y-4 w-full max-w-xs">
-            <button onclick="showView('game')" class="btn-arcade w-full text-2xl flex justify-between items-center px-6">
+        <div class="space-y-2 w-full max-w-xs">
+            <button onclick="showView('game')" class="btn-arcade w-full text-xl flex justify-between items-center px-5 py-3">
                 <span>NEW MISSION</span>
                 <span>></span>
             </button>
-            <button onclick="showView('rules')" class="btn-arcade w-full text-2xl flex justify-between items-center px-6">
+            <button onclick="showView('rules')" class="btn-arcade w-full text-xl flex justify-between items-center px-5 py-3">
                 <span>PROTOCOL</span>
                 <span>?</span>
             </button>
-            <button onclick="showView('history')" class="btn-arcade w-full text-2xl flex justify-between items-center px-6">
+            <button onclick="showView('history')" class="btn-arcade w-full text-xl flex justify-between items-center px-5 py-3">
                 <span>LOGS</span>
                 <span>#</span>
             </button>
-            <button onclick="showView('patchnotes')" class="btn-arcade w-full text-2xl flex justify-between items-center px-6">
+            <button onclick="showView('patchnotes')" class="btn-arcade w-full text-xl flex justify-between items-center px-5 py-3">
                 <span>PATCH NOTES</span>
                 <span>*</span>
             </button>
-            <button onclick="showView('settings')" class="btn-arcade w-full text-2xl flex justify-between items-center px-6">
+            <button onclick="showView('settings')" class="btn-arcade w-full text-xl flex justify-between items-center px-5 py-3">
                 <span>SETTINGS</span>
                 <span>=</span>
             </button>
         </div>
 
-        <div class="mt-8 p-6 border-4 border-black bg-gray-950 text-center shadow-[8px_8px_0px_#000] w-full max-w-xs">
-            <span class="text-[10px] text-gray-500 uppercase block mb-2">RECORD SCORE</span>
-            <span id="high-score-display" class="text-6xl text-white">00</span>
-            <span id="tier-badge" class="text-xs font-black uppercase tracking-widest mt-2 block"></span>
-        </div>
-
-        <p class="mt-8 text-xs font-bold text-slate-600 tracking-[0.4em] uppercase">EOD DEFUSAL UNIT - 8-BIT</p>
-        <p style="font-size:10px;text-align:center;opacity:0.4;padding:8px;letter-spacing:0.3em;text-transform:uppercase;">&copy; Tacticon Studios 2026 &mdash; v0.0.912</p>
+        <p class="mt-5 text-xs font-bold text-slate-600 tracking-[0.4em] uppercase">EOD DEFUSAL UNIT - 8-BIT</p>
+        <p style="font-size:10px;text-align:center;opacity:0.4;padding:6px;letter-spacing:0.3em;text-transform:uppercase;">&copy; Tacticon Studios 2026 &mdash; v0.0.913</p>
     </div>
 
     <!-- GAME VIEW -->
@@ -309,7 +303,7 @@
     <!-- HISTORY VIEW -->
     <div id="view-history" class="view-section py-20 px-6">
         <h2 class="text-5xl font-black mb-10 text-center" style="color:var(--presence); text-shadow: 6px 6px 0px #000;">MISSION LOG</h2>
-        <div class="grid grid-cols-2 gap-0 bg-black border-4 border-gray-800 mb-4 shadow-[10px_10px_0px_#000] w-full max-w-lg">
+        <div class="grid grid-cols-2 gap-0 bg-black border-4 border-gray-800 shadow-[10px_10px_0px_#000] w-full max-w-lg">
             <div class="p-4 border-r-2 border-b-2 border-gray-800 flex flex-col items-center">
                 <span class="text-[9px] text-gray-600 uppercase font-bold mb-1">MISSIONS</span>
                 <span id="stat-played" class="text-2xl font-black text-white">0</span>
@@ -318,16 +312,21 @@
                 <span class="text-[9px] text-gray-600 uppercase font-bold mb-1">WIN RATE</span>
                 <span id="stat-winrate" class="text-2xl font-black" style="color:var(--selected)">0%</span>
             </div>
-            <div class="p-4 border-r-2 border-gray-800 flex flex-col items-center">
+            <div class="p-4 border-r-2 border-b-2 border-gray-800 flex flex-col items-center">
                 <span class="text-[9px] text-gray-600 uppercase font-bold mb-1">AVG SCORE</span>
                 <span id="stat-avg" class="text-2xl font-black" style="color:var(--presence)">0.0</span>
             </div>
-            <div class="p-4 flex flex-col items-center">
+            <div class="p-4 border-b-2 border-gray-800 flex flex-col items-center">
                 <span class="text-[9px] text-gray-600 uppercase font-bold mb-1">FASTEST</span>
                 <span id="stat-fastest" class="text-2xl font-black text-white">--:--</span>
             </div>
+            <div class="col-span-2 p-4 flex flex-col items-center">
+                <span class="text-[9px] text-gray-600 uppercase font-bold mb-1">RECORD SCORE</span>
+                <span id="high-score-display" class="text-4xl font-black text-white">00</span>
+                <span id="tier-badge" class="text-[10px] font-black uppercase tracking-widest mt-1 block"></span>
+            </div>
         </div>
-        <div class="bg-black border-4 border-gray-800 p-2 max-h-[440px] overflow-y-auto shadow-[10px_10px_0px_#000] w-full max-w-lg">
+        <div class="mt-4 bg-black border-4 border-gray-800 p-2 max-h-[440px] overflow-y-auto shadow-[10px_10px_0px_#000] w-full max-w-lg">
             <table class="w-full text-left font-sans">
                 <thead>
                     <tr class="text-[10px] text-gray-600 uppercase border-b-2 border-gray-800 font-bold">
@@ -348,6 +347,14 @@
         <div class="bg-black border-4 border-gray-800 p-2 max-h-[520px] overflow-y-auto shadow-[10px_10px_0px_#000] w-full max-w-lg">
             <div class="p-6 space-y-8 text-gray-300">
                 <div>
+                    <div class="text-[10px] text-gray-600 uppercase font-bold mb-1">v0.0.913 &mdash; 2026-05-02</div>
+                    <h3 class="text-white font-bold uppercase tracking-wider mb-2">UI POLISH</h3>
+                    <ul class="text-xs space-y-1 text-gray-400">
+                        <li>— Record score moved from front page to the Logs panel</li>
+                        <li>— Front page compacted so no scrolling is needed on mobile (390x844)</li>
+                    </ul>
+                </div>
+                <div class="border-t-2 border-gray-900 pt-6">
                     <div class="text-[10px] text-gray-600 uppercase font-bold mb-1">v0.0.912</div>
                     <h3 class="text-white font-bold uppercase tracking-wider mb-2">BUG FIXES</h3>
                     <ul class="text-xs space-y-1 text-gray-400">
@@ -474,7 +481,7 @@
             </div>
             <div class="flex justify-between items-center pt-2">
                 <div class="text-[10px] text-gray-600 uppercase font-bold">VERSION</div>
-                <div class="text-[10px] text-gray-500 uppercase font-bold">v0.0.912</div>
+                <div class="text-[10px] text-gray-500 uppercase font-bold">v0.0.913</div>
             </div>
         </div>
         <button onclick="showView('menu')" class="btn-arcade mt-12 w-full max-w-xs text-2xl">BACK TO CORE</button>
@@ -546,7 +553,7 @@
     </div>
 
     <script>
-        (function(){ var _k='cb_wipe_v912'; if(localStorage.getItem(_k)!=='1'){ localStorage.removeItem('circuit_breaker_high'); localStorage.removeItem('circuit_breaker_history'); localStorage.removeItem('circuit_breaker_stats'); localStorage.setItem(_k,'1'); } })();
+        (function(){ var _k='cb_wipe_v913'; if(localStorage.getItem(_k)!=='1'){ localStorage.removeItem('circuit_breaker_high'); localStorage.removeItem('circuit_breaker_history'); localStorage.removeItem('circuit_breaker_stats'); localStorage.setItem(_k,'1'); } })();
 
         // ── Web Audio Soundscape ──────────────────────────────────────────
         const _ac = { ctx: null };
@@ -680,8 +687,7 @@
         function showView(viewId, fromPopstate) {
             document.querySelectorAll('.view-section').forEach(v => v.classList.remove('view-active'));
             document.getElementById('view-' + viewId).classList.add('view-active');
-            if(viewId === 'history') { loadHistory(); loadStats(); }
-            if(viewId === 'menu') updateHighScoreDisplay();
+            if(viewId === 'history') { loadHistory(); loadStats(); updateHighScoreDisplay(); }
             if(viewId === 'game') resetGame();
             if (!fromPopstate) {
                 if (viewId === 'menu') {
