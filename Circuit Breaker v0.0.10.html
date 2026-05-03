@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Circuit Breaker: Defusal Unit v0.0.9</title>
+    <title>Circuit Breaker: Defusal Unit v0.0.10</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -230,7 +230,7 @@
         </div>
 
         <p class="mt-5 text-xs font-bold text-slate-600 tracking-[0.4em] uppercase">EOD DEFUSAL UNIT - 8-BIT</p>
-        <p style="font-size:10px;text-align:center;opacity:0.4;padding:6px;letter-spacing:0.3em;text-transform:uppercase;">&copy; Tacticon Studios 2026 &mdash; v0.0.9</p>
+        <p style="font-size:10px;text-align:center;opacity:0.4;padding:6px;letter-spacing:0.3em;text-transform:uppercase;">&copy; Tacticon Studios 2026 &mdash; v0.0.10</p>
     </div>
 
     <!-- GAME VIEW -->
@@ -354,6 +354,13 @@
         <div class="bg-black border-4 border-gray-800 p-2 max-h-[520px] overflow-y-auto shadow-[10px_10px_0px_#000] w-full max-w-lg">
             <div class="p-6 space-y-8 text-gray-300">
                 <div>
+                    <div class="text-[10px] text-gray-600 uppercase font-bold mb-1">v0.0.10 &mdash; 2026-05-03</div>
+                    <h3 class="text-white font-bold uppercase tracking-wider mb-2">VERSION BUMP</h3>
+                    <ul class="text-xs space-y-1 text-gray-400">
+                        <li>— Version bump.</li>
+                    </ul>
+                </div>
+                <div class="border-t-2 border-gray-900 pt-6">
                     <div class="text-[10px] text-gray-600 uppercase font-bold mb-1">v0.0.9 &mdash; 2026-05-02</div>
                     <h3 class="text-white font-bold uppercase tracking-wider mb-2">BUG FIXES</h3>
                     <ul class="text-xs space-y-1 text-gray-400">
@@ -498,7 +505,7 @@
             </div>
             <div class="flex justify-between items-center pt-2">
                 <div class="text-[10px] text-gray-600 uppercase font-bold">VERSION</div>
-                <div class="text-[10px] text-gray-500 uppercase font-bold">v0.0.9</div>
+                <div class="text-[10px] text-gray-500 uppercase font-bold">v0.0.10</div>
             </div>
         </div>
         <button onclick="showView('menu')" class="btn-arcade mt-12 w-full max-w-xs text-2xl">BACK TO CORE</button>
@@ -521,6 +528,9 @@
                 <button onclick="newMission()" class="w-full py-3 border-4 border-gray-700 font-black uppercase tracking-widest text-sm bg-black" style="color: var(--selected);">
                     NEW MISSION
                 </button>
+                <button onclick="showView('menu')" class="w-full py-3 border-4 border-gray-700 font-black uppercase tracking-widest text-sm bg-black mt-3" style="color: var(--selected);">
+                    BACK TO CORE
+                </button>
             </div>
             <!-- P2 / Result view -->
             <div id="go-p2" class="hidden">
@@ -540,6 +550,9 @@
                 </div>
                 <button onclick="newMission()" class="w-full py-5 border-4 border-black font-black uppercase tracking-widest text-lg shadow-[6px_6px_0px_#000]" style="background-color: var(--selected); color: #000;">
                     NEW MISSION
+                </button>
+                <button onclick="showView('menu')" class="w-full py-3 border-4 border-gray-700 font-black uppercase tracking-widest text-sm bg-black mt-3" style="color: var(--selected);">
+                    BACK TO CORE
                 </button>
             </div>
         </div>
