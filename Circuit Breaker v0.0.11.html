@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Circuit Breaker: Defusal Unit v0.0.10</title>
+    <title>Circuit Breaker: Defusal Unit v0.0.11</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -17,13 +17,13 @@
             --bg-deep: #001220;
             --case-metal: #1a1a1e;
 
-            --dot-size: 12px;
-            --gap-size: 60px;
-            --line-thickness: 10px;
+            --dot-size: 10px;
+            --gap-size: 36px;
+            --line-thickness: 8px;
             /* Precise centering math */
-            --p-off: 24px;
-            --terminal-area: 312px; /* (5 gaps * 60) + 12 dot */
-            --grid-dim: 360px;      /* 312 + (2 * 24 padding) */
+            --p-off: 20px;
+            --terminal-area: 334px; /* (9 gaps * 36) + 10 dot */
+            --grid-dim: 374px;      /* 334 + (2 * 20 padding) */
         }
 
         body {
@@ -35,6 +35,7 @@
             margin: 0;
             display: flex;
             justify-content: center;
+            min-height: 100dvh;
         }
 
         /* CRT Scanline Effect */
@@ -190,10 +191,10 @@
         /* Scale briefcase down on narrow screens — JS positions use px so CSS-only scale is safest */
         #view-game { overflow-x: hidden; }
         @media (max-width: 479px) {
-            .briefcase-outer { transform: scale(0.9); transform-origin: top center; margin-bottom: -42px; }
+            .briefcase-outer { transform: scale(0.9); transform-origin: top center; margin-bottom: -52px; }
         }
         @media (max-width: 399px) {
-            .briefcase-outer { transform: scale(0.82); transform-origin: top center; margin-bottom: -75px; }
+            .briefcase-outer { transform: scale(0.82); transform-origin: top center; margin-bottom: -90px; }
         }
     </style>
 </head>
@@ -230,7 +231,7 @@
         </div>
 
         <p class="mt-5 text-xs font-bold text-slate-600 tracking-[0.4em] uppercase">EOD DEFUSAL UNIT - 8-BIT</p>
-        <p style="font-size:10px;text-align:center;opacity:0.4;padding:6px;letter-spacing:0.3em;text-transform:uppercase;">&copy; Tacticon Studios 2026 &mdash; v0.0.10</p>
+        <p style="font-size:10px;text-align:center;opacity:0.4;padding:6px;letter-spacing:0.3em;text-transform:uppercase;">&copy; Tacticon Studios 2026 &mdash; v0.0.11</p>
     </div>
 
     <!-- GAME VIEW -->
@@ -259,7 +260,7 @@
                 </div>
                 <div class="p-4 border-r-4 border-gray-800 flex flex-col items-center">
                     <span class="text-[10px] text-gray-600 mb-1 uppercase font-bold">Timer</span>
-                    <span id="mission-timer" class="text-3xl font-bold timer-text">03:00</span>
+                    <span id="mission-timer" class="text-3xl font-bold timer-text">05:00</span>
                 </div>
                 <div class="p-4 flex flex-col items-center justify-center">
                     <div class="flex gap-2" id="move-indicators">
@@ -297,7 +298,7 @@
             </div>
             <div class="border-l-8 p-4 bg-gray-950" style="border-color: #cbd5e1;">
                 <h3 class="text-white font-bold mb-1 uppercase tracking-wider">02. TIME BONUS</h3>
-                <p class="text-xs">DEFUSE UNDER <span class="text-red-500">180S</span>. GAIN <span style="color:var(--presence)">+0.5 PTS</span> PER 10S REMAINING UPON DEFUSAL.</p>
+                <p class="text-xs">DEFUSE UNDER <span class="text-red-500">300S</span>. GAIN <span style="color:var(--presence)">+0.5 PTS</span> PER 10S REMAINING UPON DEFUSAL.</p>
             </div>
             <div class="border-l-8 p-4 bg-gray-950" style="border-color: #ef4444;">
                 <h3 class="text-white font-bold mb-1 uppercase tracking-wider">03. DEFUSAL</h3>
@@ -354,6 +355,16 @@
         <div class="bg-black border-4 border-gray-800 p-2 max-h-[520px] overflow-y-auto shadow-[10px_10px_0px_#000] w-full max-w-lg">
             <div class="p-6 space-y-8 text-gray-300">
                 <div>
+                    <div class="text-[10px] text-gray-600 uppercase font-bold mb-1">v0.0.11 &mdash; 2026-05-03</div>
+                    <h3 class="text-white font-bold uppercase tracking-wider mb-2">GRID EXPANSION</h3>
+                    <ul class="text-xs space-y-1 text-gray-400">
+                        <li>— Grid expanded from 6×6 to 10×10</li>
+                        <li>— Time limit increased from 3 minutes to 5 minutes</li>
+                        <li>— Score tier thresholds raised to match larger grid</li>
+                        <li>— Mobile viewport fix: background now fills full screen height</li>
+                    </ul>
+                </div>
+                <div class="border-t-2 border-gray-900 pt-6">
                     <div class="text-[10px] text-gray-600 uppercase font-bold mb-1">v0.0.10 &mdash; 2026-05-03</div>
                     <h3 class="text-white font-bold uppercase tracking-wider mb-2">VERSION BUMP</h3>
                     <ul class="text-xs space-y-1 text-gray-400">
@@ -505,7 +516,7 @@
             </div>
             <div class="flex justify-between items-center pt-2">
                 <div class="text-[10px] text-gray-600 uppercase font-bold">VERSION</div>
-                <div class="text-[10px] text-gray-500 uppercase font-bold">v0.0.10</div>
+                <div class="text-[10px] text-gray-500 uppercase font-bold">v0.0.11</div>
             </div>
         </div>
         <button onclick="showView('menu')" class="btn-arcade mt-12 w-full max-w-xs text-2xl">BACK TO CORE</button>
@@ -706,9 +717,9 @@
             { id: "ZENITH",  seed: 2063 }, { id: "BLADE-9", seed: 2179 }
         ];
 
-        const GRID_SIZE = 6;
+        const GRID_SIZE = 10;
         const BOXES_SIZE = GRID_SIZE - 1;
-        const GAP = 60;
+        const GAP = 36;
         const MATCH_TTL = 72 * 60 * 60 * 1000;
 
         const state = {
@@ -785,7 +796,7 @@
         function resetGame() {
             clearInterval(state.timerInterval);
             state.timerActive = false;
-            state.timeLeft = 180;
+            state.timeLeft = 300;
             state.isGameOver = false;
             state.playerScore = 0;
             state.moveCycle = 0;
@@ -798,7 +809,7 @@
             state.hLines = Array(GRID_SIZE).fill().map(() => Array(BOXES_SIZE).fill(null));
             state.vLines = Array(BOXES_SIZE).fill().map(() => Array(GRID_SIZE).fill(null));
             state.boxes = Array(BOXES_SIZE).fill().map(() => Array(BOXES_SIZE).fill(null));
-            elements.timer.textContent = "03:00";
+            elements.timer.textContent = "05:00";
             elements.modal.classList.add('hidden');
             const mission = getMissionFromSeed(state.matchSeed);
             state.currentMission = mission;
@@ -810,9 +821,9 @@
         }
 
         function getTier(score) {
-            if (score >= 20) return { label: 'GOLD',   color: '#fbbf24' };
-            if (score >= 12) return { label: 'SILVER', color: '#cbd5e1' };
-            if (score >= 5)  return { label: 'BRONZE', color: '#b45309' };
+            if (score >= 60) return { label: 'GOLD',   color: '#fbbf24' };
+            if (score >= 35) return { label: 'SILVER', color: '#cbd5e1' };
+            if (score >= 15) return { label: 'BRONZE', color: '#b45309' };
             return null;
         }
 
@@ -853,7 +864,7 @@
             const mission = state.currentMission;
             const effectiveSeed = (state.isChallenge && mission && mission.seed != null) ? mission.seed : seed;
 
-            const MIN_PLAYABLE = 10;
+            const MIN_PLAYABLE = 20;
             const MAX_ATTEMPTS = 8;
 
             for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
@@ -890,7 +901,7 @@
 
         function createBoard() {
             elements.grid.innerHTML = '';
-            const pOff = 24;
+            const pOff = 20;
             for (let r = 0; r < BOXES_SIZE; r++) {
                 for (let c = 0; c < BOXES_SIZE; c++) {
                     const b = document.createElement('div');
@@ -1014,7 +1025,7 @@
 
                 stats.wins++;
                 stats.totalScore += finalScore;
-                const timeUsed = 180 - state.timeLeft;
+                const timeUsed = 300 - state.timeLeft;
                 if (stats.fastestClear === null || timeUsed < stats.fastestClear) stats.fastestClear = timeUsed;
                 saveStats(stats);
 
