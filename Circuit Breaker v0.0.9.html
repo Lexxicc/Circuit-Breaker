@@ -2,9 +2,12 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Circuit Breaker: Defusal Unit v0.0.9</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
         :root {
             --sys-nav: #002D47;
@@ -23,15 +26,10 @@
             --grid-dim: 360px;      /* 312 + (2 * 24 padding) */
         }
 
-        @font-face {
-            font-family: 'Arcade';
-            src: url('https://fonts.cdnfonts.com/s/14022/ArcadeClassic.woff') format('woff');
-        }
-
         body {
             background-color: var(--bg-deep);
             color: #d1d5db;
-            font-family: 'Arcade', monospace;
+            font-family: 'Press Start 2P', monospace;
             image-rendering: pixelated;
             overflow-x: hidden;
             margin: 0;
@@ -188,6 +186,15 @@
         ::-webkit-scrollbar { width: 12px; }
         ::-webkit-scrollbar-track { background: #000; }
         ::-webkit-scrollbar-thumb { background: var(--sys-nav); border: 4px solid #000; }
+
+        /* Scale briefcase down on narrow screens — JS positions use px so CSS-only scale is safest */
+        #view-game { overflow-x: hidden; }
+        @media (max-width: 479px) {
+            .briefcase-outer { transform: scale(0.9); transform-origin: top center; margin-bottom: -42px; }
+        }
+        @media (max-width: 399px) {
+            .briefcase-outer { transform: scale(0.82); transform-origin: top center; margin-bottom: -75px; }
+        }
     </style>
 </head>
 <body>
