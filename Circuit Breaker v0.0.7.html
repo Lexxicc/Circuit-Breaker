@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="author" content="lexxicc">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Circuit Breaker: Defusal Unit v0.0.5</title>
+    <title>Circuit Breaker: Defusal Unit v0.0.7</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -232,13 +232,13 @@
         </div>
 
         <p class="mt-5 text-xs font-bold text-slate-600 tracking-[0.4em] uppercase">EOD DEFUSAL UNIT - 8-BIT</p>
-        <p style="font-size:10px;text-align:center;opacity:0.4;padding:6px;letter-spacing:0.3em;text-transform:uppercase;">&copy; Tacticon Studios 2026 &mdash; v0.0.5</p>
+        <p style="font-size:10px;text-align:center;opacity:0.4;padding:6px;letter-spacing:0.3em;text-transform:uppercase;">&copy; Tacticon Studios 2026 &mdash; v0.0.7</p>
     </div>
 
     <!-- GAME VIEW -->
     <div id="view-game" class="view-section py-10 px-4">
         <div class="w-full max-w-xl flex justify-between items-center mb-8 px-2">
-            <button onclick="abortMission()" class="text-xs uppercase bg-black px-4 py-2 border-2 border-gray-700 hover:border-white transition" style="min-height:44px;">← ABORT</button>
+            <button onclick="abortMission()" class="text-xs uppercase bg-black px-4 py-2 border-2 border-gray-700 hover:border-white transition flex items-center justify-center" style="min-height:44px;">ABORT</button>
             <div class="text-right flex items-center gap-3">
                 <button id="mute-btn" onclick="toggleMute()" title="Toggle sound" style="min-width:44px;min-height:44px;background:#000;border:2px solid #374151;color:#9ca3af;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;">🔊</button>
                 <div>
@@ -261,7 +261,7 @@
                 </div>
                 <div class="p-4 border-r-4 border-gray-800 flex flex-col items-center">
                     <span class="text-[10px] text-gray-600 mb-1 uppercase font-bold">Timer</span>
-                    <span id="mission-timer" class="text-3xl font-bold timer-text">05:00</span>
+                    <span id="mission-timer" class="text-3xl font-bold timer-text">04:00</span>
                 </div>
                 <div class="p-4 flex flex-col items-center justify-center">
                     <div class="flex gap-2" id="move-indicators">
@@ -299,7 +299,7 @@
             </div>
             <div class="border-l-8 p-4 bg-gray-950" style="border-color: #cbd5e1;">
                 <h3 class="text-white font-bold mb-1 uppercase tracking-wider">02. TIME BONUS</h3>
-                <p class="text-xs">DEFUSE UNDER <span class="text-red-500">300S</span>. GAIN <span style="color:var(--presence)">+0.5 PTS</span> PER 10S REMAINING UPON DEFUSAL.</p>
+                <p class="text-xs">DEFUSE UNDER <span class="text-red-500">240S</span>. GAIN <span style="color:var(--presence)">+0.5 PTS</span> PER 10S REMAINING UPON DEFUSAL.</p>
             </div>
             <div class="border-l-8 p-4 bg-gray-950" style="border-color: #ef4444;">
                 <h3 class="text-white font-bold mb-1 uppercase tracking-wider">03. DEFUSAL</h3>
@@ -356,6 +356,20 @@
         <div class="bg-black border-4 border-gray-800 p-2 max-h-[520px] overflow-y-auto shadow-[10px_10px_0px_#000] w-full max-w-lg">
             <div class="p-6 space-y-8 text-gray-300">
                 <div>
+                    <div class="text-[10px] text-gray-600 uppercase font-bold mb-1">v0.0.7 &mdash; 2026-05-04</div>
+                    <h3 class="text-white font-bold uppercase tracking-wider mb-2">MISSION TIMER</h3>
+                    <ul class="text-xs space-y-1 text-gray-400">
+                        <li>— Mission timer set to 4:00; defusal scoring +0.5pts per 10s remaining; abort button added.</li>
+                    </ul>
+                </div>
+                <div class="border-t-2 border-gray-900 pt-6">
+                    <div class="text-[10px] text-gray-600 uppercase font-bold mb-1">v0.0.6 &mdash; 2026-05-04</div>
+                    <h3 class="text-white font-bold uppercase tracking-wider mb-2">VERSION BUMP</h3>
+                    <ul class="text-xs space-y-1 text-gray-400">
+                        <li>— Version bump.</li>
+                    </ul>
+                </div>
+                <div class="border-t-2 border-gray-900 pt-6">
                     <div class="text-[10px] text-gray-600 uppercase font-bold mb-1">v0.0.5 &mdash; 2026-05-04</div>
                     <h3 class="text-white font-bold uppercase tracking-wider mb-2">ARCTIC COLOURS</h3>
                     <ul class="text-xs space-y-1 text-gray-400">
@@ -725,7 +739,7 @@
             { id: "ZENITH",  seed: 2063 }, { id: "BLADE-9", seed: 2179 }
         ];
 
-        const GRID_SIZE = 10;
+        const GRID_SIZE = 8;
         const BOXES_SIZE = GRID_SIZE - 1;
         const GAP = 36;
         const MATCH_TTL = 72 * 60 * 60 * 1000;
@@ -733,7 +747,7 @@
         const state = {
             hLines: [], vLines: [], boxes: [],
             playerScore: 0, moveCycle: 0,
-            isGameOver: false, timeLeft: 180,
+            isGameOver: false, timeLeft: 240,
             timerInterval: null, timerActive: false,
             currentMission: null,
             matchSeed: 0,
@@ -804,7 +818,7 @@
         function resetGame() {
             clearInterval(state.timerInterval);
             state.timerActive = false;
-            state.timeLeft = 300;
+            state.timeLeft = 240;
             state.isGameOver = false;
             state.playerScore = 0;
             state.moveCycle = 0;
@@ -817,7 +831,7 @@
             state.hLines = Array(GRID_SIZE).fill().map(() => Array(BOXES_SIZE).fill(null));
             state.vLines = Array(BOXES_SIZE).fill().map(() => Array(GRID_SIZE).fill(null));
             state.boxes = Array(BOXES_SIZE).fill().map(() => Array(BOXES_SIZE).fill(null));
-            elements.timer.textContent = "05:00";
+            elements.timer.textContent = "04:00";
             elements.modal.classList.add('hidden');
             const mission = getMissionFromSeed(state.matchSeed);
             state.currentMission = mission;
@@ -829,9 +843,9 @@
         }
 
         function getTier(score) {
-            if (score >= 60) return { label: 'GOLD',   color: '#fbbf24' };
-            if (score >= 35) return { label: 'SILVER', color: '#cbd5e1' };
-            if (score >= 15) return { label: 'BRONZE', color: '#b45309' };
+            if (score >= 35) return { label: 'GOLD',   color: '#fbbf24' };
+            if (score >= 20) return { label: 'SILVER', color: '#cbd5e1' };
+            if (score >= 10) return { label: 'BRONZE', color: '#b45309' };
             return null;
         }
 
@@ -1033,7 +1047,7 @@
 
                 stats.wins++;
                 stats.totalScore += finalScore;
-                const timeUsed = 300 - state.timeLeft;
+                const timeUsed = 240 - state.timeLeft;
                 if (stats.fastestClear === null || timeUsed < stats.fastestClear) stats.fastestClear = timeUsed;
                 saveStats(stats);
 
