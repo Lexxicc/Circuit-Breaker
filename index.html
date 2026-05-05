@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="author" content="lexxicc">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Circuit Breaker: Defusal Unit v0.0.8</title>
+    <title>Circuit Breaker: Defusal Unit v0.0.9</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -33,10 +33,15 @@
             font-family: 'Press Start 2P', monospace;
             image-rendering: pixelated;
             overflow-x: hidden;
+            overscroll-behavior: none;
             margin: 0;
             display: flex;
             justify-content: center;
             min-height: 100dvh;
+            padding-top: env(safe-area-inset-top, 0px);
+            padding-bottom: env(safe-area-inset-bottom, 0px);
+            padding-left: env(safe-area-inset-left, 0px);
+            padding-right: env(safe-area-inset-right, 0px);
         }
 
         /* CRT Scanline Effect */
@@ -236,7 +241,7 @@
         </div>
 
         <p class="mt-5 text-xs font-bold text-slate-600 tracking-[0.4em] uppercase">EOD DEFUSAL UNIT - 8-BIT</p>
-        <p style="font-size:10px;text-align:center;opacity:0.4;padding:6px;letter-spacing:0.3em;text-transform:uppercase;">&copy; Tacticon Studios 2026 &mdash; v0.0.8</p>
+        <p style="font-size:10px;text-align:center;opacity:0.4;padding:6px;letter-spacing:0.3em;text-transform:uppercase;">&copy; Tacticon Studios 2026 &mdash; v0.0.9</p>
     </div>
 
     <!-- GAME VIEW -->
@@ -359,6 +364,13 @@
         <h2 class="text-5xl font-black mb-10 text-center" style="color:var(--notify); text-shadow: 6px 6px 0px #000;">PATCH NOTES</h2>
         <div class="bg-black border-4 border-gray-800 p-2 max-h-[520px] overflow-y-auto shadow-[10px_10px_0px_#000] w-full max-w-lg">
             <div class="p-6 space-y-8 text-gray-300">
+                <div>
+                    <div class="text-[10px] text-gray-600 uppercase font-bold mb-1">v0.0.9 &mdash; 2026-05-05</div>
+                    <h3 class="text-white font-bold uppercase tracking-wider mb-2">VERSION BUMP</h3>
+                    <ul class="text-xs space-y-1 text-gray-400">
+                        <li>— Mobile optimisation: added overscroll-behavior: none and safe-area inset padding; localStorage keys standardised to CB prefix.</li>
+                    </ul>
+                </div>
                 <div>
                     <div class="text-[10px] text-gray-600 uppercase font-bold mb-1">v0.0.8 &mdash; 2026-05-05</div>
                     <h3 class="text-white font-bold uppercase tracking-wider mb-2">VERSION BUMP</h3>
@@ -824,7 +836,7 @@
             moveTimes: [],
             flagged: false,
             lastFinalScore: 0,
-            highScore: parseFloat(localStorage.getItem('circuit_breaker_high') || '0') || 0
+            highScore: parseFloat(localStorage.getItem('CB_high') || '0') || 0
         };
 
         const elements = {
@@ -1176,14 +1188,14 @@
 
         function getStats() {
             try {
-                return JSON.parse(localStorage.getItem('circuit_breaker_stats') || '{"gamesPlayed":0,"wins":0,"totalScore":0,"fastestClear":null}');
+                return JSON.parse(localStorage.getItem('CB_stats') || '{"gamesPlayed":0,"wins":0,"totalScore":0,"fastestClear":null}');
             } catch(e) {
                 return { gamesPlayed: 0, wins: 0, totalScore: 0, fastestClear: null };
             }
         }
 
         function saveStats(stats) {
-            localStorage.setItem('circuit_breaker_stats', JSON.stringify(stats));
+            localStorage.setItem('CB_stats', JSON.stringify(stats));
         }
 
         function loadStats() {
@@ -1275,7 +1287,7 @@
         function saveScore(score, matchType, opponentScore, result, flagged, opponentFlagged) {
             let history;
             try {
-                history = JSON.parse(localStorage.getItem('circuit_breaker_history') || '[]');
+                history = JSON.parse(localStorage.getItem('CB_history') || '[]');
             } catch(e) {
                 history = [];
             }
@@ -1288,19 +1300,19 @@
                 flagged: flagged || false,
                 opponentFlagged: opponentFlagged || false
             });
-            localStorage.setItem('circuit_breaker_history', JSON.stringify(history.slice(0, 20)));
+            localStorage.setItem('CB_history', JSON.stringify(history.slice(0, 20)));
             // Only update the high score for winning outcomes; failed/expired games do not qualify.
             const isFailure = result === 'FAIL' || result === 'LOSS';
             if (!isFailure && parseFloat(score) > state.highScore) {
                 state.highScore = parseFloat(score);
-                localStorage.setItem('circuit_breaker_high', state.highScore);
+                localStorage.setItem('CB_high', state.highScore);
             }
         }
 
         function loadHistory() {
             let history;
             try {
-                history = JSON.parse(localStorage.getItem('circuit_breaker_history') || '[]');
+                history = JSON.parse(localStorage.getItem('CB_history') || '[]');
             } catch(e) {
                 history = [];
             }
@@ -1378,7 +1390,7 @@
 
         function clearHistory() {
             if (!confirm('Wipe all mission log history?')) return;
-            localStorage.removeItem('circuit_breaker_history');
+            localStorage.removeItem('CB_history');
             loadHistory();
             loadStats();
             updateHighScoreDisplay();
@@ -1387,13 +1399,13 @@
 
         function clearStats() {
             if (!confirm('Reset all stats?')) return;
-            localStorage.removeItem('circuit_breaker_stats');
+            localStorage.removeItem('CB_stats');
             alert('Stats reset.');
         }
 
         function clearHighScore() {
             if (!confirm('Reset high score?')) return;
-            localStorage.removeItem('circuit_breaker_high');
+            localStorage.removeItem('CB_high');
             state.highScore = 0;
             updateHighScoreDisplay();
             alert('High score cleared.');
