@@ -229,6 +229,10 @@
                 <span>SETTINGS</span>
                 <span>=</span>
             </button>
+            <button onclick="showView('challenge')" class="btn-arcade w-full text-xl flex justify-between items-center px-5 py-3">
+                <span>ACCEPT CHALLENGE</span>
+                <span>⚔</span>
+            </button>
         </div>
 
         <p class="mt-5 text-xs font-bold text-slate-600 tracking-[0.4em] uppercase">EOD DEFUSAL UNIT - 8-BIT</p>
@@ -515,6 +519,29 @@
     <div id="view-settings" class="view-section py-20 px-6">
         <h2 class="text-5xl font-black mb-10 text-center" style="color:var(--selected); text-shadow: 6px 6px 0px #000;">SETTINGS</h2>
         <div class="bg-black border-4 border-gray-800 p-8 space-y-6 shadow-[10px_10px_0px_#000] w-full max-w-lg">
+            <div class="border-b-2 border-gray-900 pb-6 space-y-4">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <div class="text-white font-bold uppercase text-sm tracking-wider">SOUND EFFECTS</div>
+                        <div class="text-[10px] text-gray-600 uppercase mt-1">Toggle all game sounds</div>
+                    </div>
+                    <button id="sfx-toggle-btn" onclick="toggleSFX()" class="text-xs uppercase px-4 py-2 border-4 border-gray-700 bg-black font-black shadow-[4px_4px_0px_#000]" style="color:var(--selected);min-width:72px;">ON</button>
+                </div>
+                <div>
+                    <div class="flex justify-between mb-1">
+                        <div class="text-white font-bold uppercase text-sm tracking-wider">SFX VOLUME</div>
+                        <div id="sfx-vol-label" class="text-[10px] text-gray-500 uppercase font-bold">100%</div>
+                    </div>
+                    <input id="sfx-vol-slider" type="range" min="0" max="100" value="100" oninput="updateSFXVolume(this.value)" class="w-full accent-current" style="color:var(--selected);" />
+                </div>
+                <div>
+                    <div class="flex justify-between mb-1">
+                        <div class="text-white font-bold uppercase text-sm tracking-wider">BRIGHTNESS</div>
+                        <div id="brightness-label" class="text-[10px] text-gray-500 uppercase font-bold">100%</div>
+                    </div>
+                    <input id="brightness-slider" type="range" min="20" max="100" value="100" oninput="updateBrightness(this.value)" class="w-full accent-current" style="color:var(--selected);" />
+                </div>
+            </div>
             <div class="flex justify-between items-center border-b-2 border-gray-900 pb-6">
                 <div>
                     <div class="text-white font-bold uppercase text-sm tracking-wider">CLEAR MISSION LOG</div>
@@ -540,6 +567,21 @@
                 <div class="text-[10px] text-gray-600 uppercase font-bold">VERSION</div>
                 <div class="text-[10px] text-gray-500 uppercase font-bold">v0.0.11</div>
             </div>
+        </div>
+        <button onclick="showView('menu')" class="btn-arcade mt-12 w-full max-w-xs text-2xl">BACK TO CORE</button>
+    </div>
+
+    <!-- ACCEPT CHALLENGE VIEW -->
+    <div id="view-challenge" class="view-section py-20 px-6">
+        <h2 class="text-5xl font-black mb-10 text-center" style="color:var(--selected); text-shadow: 6px 6px 0px #000;">ACCEPT CHALLENGE</h2>
+        <div class="bg-black border-4 border-gray-800 p-8 space-y-6 shadow-[10px_10px_0px_#000] w-full max-w-lg">
+            <div>
+                <div class="text-white font-bold uppercase text-sm tracking-wider mb-2">CHALLENGE LINK</div>
+                <div class="text-[10px] text-gray-600 uppercase mb-4">Paste a challenge link from your opponent to play the same circuit and beat their score.</div>
+                <input id="challenge-accept-input" type="text" placeholder="Paste challenge link here..." class="w-full bg-black border-4 border-gray-700 text-white font-bold uppercase text-sm px-4 py-3 outline-none focus:border-current" style="color:var(--selected);box-sizing:border-box;" />
+                <p id="challenge-accept-error" class="text-[10px] font-bold uppercase mt-2 hidden" style="color:#ef4444;">INVALID LINK — CHECK URL AND TRY AGAIN</p>
+            </div>
+            <button onclick="acceptChallengeFromInput()" class="btn-arcade w-full text-xl">⚡ START MISSION</button>
         </div>
         <button onclick="showView('menu')" class="btn-arcade mt-12 w-full max-w-xs text-2xl">BACK TO CORE</button>
     </div>
@@ -616,7 +658,6 @@
     </div>
 
     <script>
-        (function(){ var _k='cb_wipe_v8'; if(localStorage.getItem(_k)!=='1'){ localStorage.removeItem('circuit_breaker_high'); localStorage.removeItem('circuit_breaker_history'); localStorage.removeItem('circuit_breaker_stats'); localStorage.setItem(_k,'1'); } })();
 
         // ── Web Audio Soundscape ──────────────────────────────────────────
         const _ac = { ctx: null, tickGain: null };
@@ -644,10 +685,30 @@
             } catch(e) {}
         }
         let _muted = false;
+        let _sfxEnabled = true;
+        let _sfxVol = 1.0;
         function toggleMute() {
             _muted = !_muted;
             const btn = document.getElementById('mute-btn');
             if (btn) btn.textContent = _muted ? '🔇' : '🔊';
+        }
+        function toggleSFX() {
+            _sfxEnabled = !_sfxEnabled;
+            _muted = !_sfxEnabled;
+            const btn = document.getElementById('sfx-toggle-btn');
+            const muteBtn = document.getElementById('mute-btn');
+            if (btn) btn.textContent = _sfxEnabled ? 'ON' : 'OFF';
+            if (muteBtn) muteBtn.textContent = _muted ? '🔇' : '🔊';
+        }
+        function updateSFXVolume(v) {
+            _sfxVol = parseInt(v) / 100;
+            const label = document.getElementById('sfx-vol-label');
+            if (label) label.textContent = v + '%';
+        }
+        function updateBrightness(v) {
+            document.body.style.filter = `brightness(${parseInt(v) / 100})`;
+            const label = document.getElementById('brightness-label');
+            if (label) label.textContent = v + '%';
         }
         function playTone(freq, dur, type='sine', vol=0.3, delay=0) {
             if (_muted) return;
@@ -658,7 +719,7 @@
                 osc.connect(gain); gain.connect(ctx.destination);
                 osc.type = type;
                 osc.frequency.setValueAtTime(freq, ctx.currentTime + delay);
-                gain.gain.setValueAtTime(vol, ctx.currentTime + delay);
+                gain.gain.setValueAtTime(vol * _sfxVol, ctx.currentTime + delay);
                 gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + dur);
                 osc.start(ctx.currentTime + delay);
                 osc.stop(ctx.currentTime + delay + dur);
@@ -674,7 +735,7 @@
                 const src = ctx.createBufferSource();
                 const gain = ctx.createGain();
                 src.buffer = buf; src.connect(gain); gain.connect(ctx.destination);
-                gain.gain.setValueAtTime(vol, ctx.currentTime);
+                gain.gain.setValueAtTime(vol * _sfxVol, ctx.currentTime);
                 gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
                 src.start(); src.stop(ctx.currentTime + dur);
             } catch(e) {}
@@ -1180,6 +1241,22 @@
         function acceptChallenge() {
             document.getElementById('challenge-modal').classList.add('hidden');
             showView('game');
+        }
+
+        function acceptChallengeFromInput() {
+            const val = (document.getElementById('challenge-accept-input').value || '').trim();
+            let code = val;
+            const mIdx = val.indexOf('#m=');
+            if (mIdx !== -1) code = val.slice(mIdx + 3);
+            const err = document.getElementById('challenge-accept-error');
+            try {
+                const data = JSON.parse(atob(code));
+                if (!data || typeof data.seed !== 'number' || !data.missionId) throw new Error();
+                if (err) err.classList.add('hidden');
+                location.href = location.href.split('#')[0] + '#m=' + code;
+            } catch(e) {
+                if (err) err.classList.remove('hidden');
+            }
         }
 
         function newMission() {
